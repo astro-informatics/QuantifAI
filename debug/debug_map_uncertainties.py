@@ -145,7 +145,17 @@ plt.close()
 
 # Compute HPD region
 
-x_hat_np = np.abs(wvlt_best_estimate)
+use_CAI_solution = True
+
+if use_CAI_solution:
+    matlab_output = '/Users/tliaudat/Documents/postdoc/github/large-scale-UQ/debug/matlab_output/modified_Cai_results.mat'
+    cai_resutls = sio.loadmat(matlab_output)
+    x_hat_np = cai_resutls['sol_ana']
+    save_name = save_name + '_Cai_sol'
+else:
+    x_hat_np = np.abs(wvlt_best_estimate)
+
+# Instead of using the 
 
 alpha = 0.01
 N = x_hat_np.size
