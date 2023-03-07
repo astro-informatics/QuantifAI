@@ -9,7 +9,9 @@ __pycache__/
 *.DS_Store
 data/*.DS_Store
 
-*.mat
+debug/matlab_output/M31_reg_strength_variations/LCI_results/*.mat
+debug/matlab_output/M31_reg_strength_variations/saved_ana_mats/*.mat
+debug/matlab_output/M31_reg_strength_variations/saved_syn_mats/*.mat
 
 # Distribution / packaging
 .Python
