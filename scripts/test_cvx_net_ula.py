@@ -186,7 +186,8 @@ sys.path.append("convex_ridge_regularizers")
 ### set seed
 torch.manual_seed(0)
 
-from models import utils
+# from models import utils
+from convex_reg import utils
 device = 'cuda:0'
 torch.set_grad_enabled(False)
 torch.set_num_threads(4)
