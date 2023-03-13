@@ -106,7 +106,7 @@ class MaskedFourierFromMatrix:
     Masked fourier sensing operator i.e. MRI/Radio imaging.
     """
 
-    def __init__(self, mat, dim):
+    def __init__(self, ratio, dim):
         """Initialises the masked fourier sensing operator.
 
         Args:
