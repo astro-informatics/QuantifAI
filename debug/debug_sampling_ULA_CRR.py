@@ -243,8 +243,8 @@ for it in range(len(my_lmbda)):
     # Sampling alg params
     # maxit = np.int64(1e4)
     frac_burnin = 0.2
-    n_samples = np.int64(1e3)
-    thinning = np.int64(1e3)
+    n_samples = np.int64(1e2)
+    thinning = np.int64(1e2)
     maxit = np.int64(n_samples * thinning * (1 + frac_burnin))
 
     # Define prefix
@@ -462,7 +462,7 @@ for it in range(len(my_lmbda)):
 
     fig, ax = plt.subplots()
     ax.set_title("PSNR")
-    ax.semilogx(np.arange(1,len(psnr_values)+1), psnr_values3
+    ax.semilogx(np.arange(1,len(psnr_values)+1), psnr_values)
     plt.savefig(savefig_dir+save_prefix+'_PSNR_evolution.pdf')
     # plt.show()
     plt.close()
