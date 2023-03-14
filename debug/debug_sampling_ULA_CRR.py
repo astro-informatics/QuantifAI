@@ -243,9 +243,9 @@ for it in range(len(my_lmbda)):
     # Sampling alg params
     # maxit = np.int64(1e4)
     frac_burnin = 0.2
-    n_samples = np.int64(1e2)
-    thinning = np.int64(1e2)
-    maxit = np.int64(n_samples * thinning * (1 + frac_burnin))
+    n_samples = np.int64(1e3)
+    thinning = np.int64(1e3)
+    maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 
     # Define prefix
     save_prefix = 'frac_delta_{:.1e}_lmbd_{:.1e}_mu_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
