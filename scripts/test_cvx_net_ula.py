@@ -10,9 +10,19 @@
 import numpy as np
 import hdf5storage
 import sys
-sys.path.append("~/code")
+import torch
+# sys.path.append("~/code")
 import os
-os.chdir("C:/Users/teresa-klatzer/code")
+from tqdm import tqdm
+# os.chdir("C:/Users/teresa-klatzer/code")
+
+# Select GPU
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
+print(torch.cuda.is_available())
+print(torch.cuda.device_count())
+print(torch.cuda.current_device())
+print(torch.cuda.get_device_name(torch.cuda.current_device()))
+
 
 def blur_operators(kernel_len, size, type_blur):
 
@@ -26,6 +36,7 @@ def blur_operators(kernel_len, size, type_blur):
         c =  np.ceil((np.array([ly,lx])-1)/2).astype("int64")
     else:
         print("Write more code!")
+        raise NotImplementedError
 
     H_FFT = torch.fft.fft2(torch.roll(h, shifts = (-c[0],-c[1]), dims=(0,1)))
     HC_FFT = torch.conj(H_FFT)
@@ -181,21 +192,22 @@ def ESS(arr):
 ### use the cvx ridge regularizer
 
 import torch
-sys.path.append("convex_ridge_regularizers")
+# sys.path.append("convex_ridge_regularizers")
 
 ### set seed
 torch.manual_seed(0)
 
 # from models import utils
-from convex_reg import utils
+from convex_reg import utils as utils_cvx_reg
 device = 'cuda:0'
 torch.set_grad_enabled(False)
 torch.set_num_threads(4)
 
 sigma_training = 25
-t = 5
-exp_name = f'Sigma_{sigma_training}_t_{t}'
-model = utils.load_model(exp_name, device)
+t_model = 5
+dir_name = '/disk/xray0/tl3/repos/convex_ridge_regularizers/trained_models/'
+exp_name = f'Sigma_{sigma_training}_t_{t_model}/'
+model = utils_cvx_reg.load_model(dir_name + exp_name, device, device_type='gpu')
 
 print(f'Numbers of parameters before prunning: {model.num_params}')
 model.prune()
@@ -220,15 +232,20 @@ cost = model.cost(100*im)
 import matplotlib.pyplot as plt
 import cv2
 import math
-img = cv2.resize(cv2.imread("./convex_ridge_regularizers/image/sample.JPG", cv2.IMREAD_GRAYSCALE), (504, 378))
+
+example_img_dir = '/disk/xray0/tl3/repos/convex_ridge_regularizers/image/'
+img = cv2.resize(cv2.imread(example_img_dir + 'sample.JPG', cv2.IMREAD_GRAYSCALE), (504, 378))
 img = img[:377, :377]
 img_torch = torch.tensor(img, device=device).reshape((1,1) + img.shape)/255
 
 
 # try regularizer on a deblurring problem (using 5x5 uniform blur)
 # first, setup the operators
-A, AT, AAT_norm = blur_operators([5,5], [img.shape[0],img.shape[1]],
-                                 "uniform")
+A, AT, AAT_norm = blur_operators(
+    [5,5],
+    [img.shape[0],img.shape[1]],
+    "uniform"
+)
 
 
 # set the desired noise level and add noise to the burred image
@@ -248,7 +265,7 @@ lmbd = 1405
 
 # optimization settings
 tol = 1e-4
-n_iter_max = 300
+n_iter_max = 1000
 
 # stepsize rule
 L = model.L 
@@ -260,7 +277,7 @@ x = torch.clone(img_torch_blurry)
 z = torch.clone(img_torch_blurry)
 t = 1
 
-for i in range(n_iter_max):
+for i in tqdm(range(n_iter_max)):
     x_old = torch.clone(x)
     # added deblurring data term here
     x = z - alpha*(AT(A(z) - img_torch_blurry)/sigma2 + lmbd * model(mu * z))
