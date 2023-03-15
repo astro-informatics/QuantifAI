@@ -13,6 +13,9 @@ debug/matlab_output/M31_reg_strength_variations/LCI_results/*.mat
 debug/matlab_output/M31_reg_strength_variations/saved_ana_mats/*.mat
 debug/matlab_output/M31_reg_strength_variations/saved_syn_mats/*.mat
 
+debug/sampling-outputs/frac*.npy
+debug/screenlog*
+
 # Distribution / packaging
 .Python
 build/
