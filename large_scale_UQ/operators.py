@@ -2,38 +2,9 @@
 import numpy as np
 import torch
 from large_scale_UQ.utils import max_eigenval
-
-
-class Identity:
-    """Identity operator
-
-    Notes:
-        Implemented originally in optimus-primal.
-    """
-    def __init__(self):
-        """Initialises an identity operator class"""
-
-    def dir_op(self, x):
-        """Computes the forward operator of the identity class.
-
-        Args:
-            x (np.ndarray): Vector to apply identity to.
-
-        Returns:
-            np.ndarray: array of coefficients
-        """
-        return x
-
-    def adj_op(self, x):
-        """Computes the forward adjoint operator of the identity class.
-
-        Args:
-            x (np.ndarray): Vector to apply identity to.
-
-        Returns:
-            np.ndarray: array of coefficients
-        """
-        return x
+from large_scale_UQ.empty import Identity
+import ptwt
+from functools import partial
 
 
 class MaskedFourier:
@@ -384,7 +355,7 @@ class MaskedFourier_torch(torch.nn.Module):
         return torch.fft.ifft2(x, norm=self.norm)
     
 
-class l2_norm_torch(torch.nn.Module):
+class L2Norm_torch(torch.nn.Module):
     """This class computes the gradient operator of the l2 norm function.
 
                         f(x) = ||y - Phi x||^2/2/sigma^2
@@ -433,7 +404,7 @@ class l2_norm_torch(torch.nn.Module):
         max_val = max_eigenval(
             A=A,
             At=At,
-            im_size=self.data.shape[3],
+            im_size=self.data.shape[2],
             tol=1e-4,
             max_iter=int(1e4),
             verbose=0,
@@ -474,4 +445,355 @@ class l2_norm_torch(torch.nn.Module):
         return torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
             2 * self.sigma ** 2
         )        
+
+
+class Wavelets_torch(torch.nn.Module):
+    """
+    Constructs a linear operator for abstract Daubechies Wavelets
+    """
+
+    def __init__(self, wav, levels, mode='periodic'):
+        """Initialises Daubechies Wavelet linear operator class
+
+        Args:
+
+            wav (string): Wavelet type (see https://tinyurl.com/5n7wzpmb)
+            levels (int): Wavelet levels (scales) to consider
+            mode (str): Wavelet signal extension mode
+
+        Raises:
+
+            ValueError: Raised when levels are not positive definite
+            ValueError: Raised if the wavelet type is not a string
+
+        """
+        super().__init__()
+        if np.any(levels <= 0):
+            raise ValueError("'levels' must be positive")
+        if not isinstance(wav, str):
+            raise ValueError("'wav' must be a string")
+        self.wav = wav
+        self.levels = np.int64(levels)
+        self.mode = mode
+
+        self.adj_op(self.dir_op(torch.ones((1, 64, 64))))
+
+    def dir_op(self, x):
+        """Evaluates the forward abstract wavelet transform of x
+
+        Args:
+
+            x (torch.Tensor): Array to wavelet transform. Can be [batch, H, W] or [H, W], 
+                but it will raise an error if used with [batch, channels, H, W].
+
+        Returns:
+
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]): 
+                Wavelet decomposition coefficients
+
+        Raises:
+
+            ValueError: Raised when the shape of x is not even in every dimension
+        """
+
+        return ptwt.wavedec2(
+            x, wavelet=self.wav, level=self.levels, mode=self.mode
+        )
+
+    def adj_op(self, coeffs):
+        """Evaluates the forward adjoint abstract wavelet transform of x
+
+        Args:
+
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                Wavelet decomposition coefficients
+
+        Returns:
+
+            img (torch.Tensor): reconstruted image.
+        """
+        return ptwt.waverec2(coeffs, wavelet=self.wav).squeeze(1)
+
+
+class DictionaryWv_torch(torch.nn.Module):
+    """
+    Constructs class to permit sparsity averaging across a collection of wavelet dictionaries
+    """
+    def __init__(self, wavs, levels, mode='periodic'):
+        """Initialises a linear operator for a collection of abstract wavelet dictionaries
+
+        Args:
+
+            wavs (list[string]): List of wavelet types (see https://tinyurl.com/5n7wzpmb)
+            levels (list[int]): Wavelet levels (scales) to consider
+            mode (str): Wavelet signal extension mode shared by all dictionaries
+
+        Raises:
+
+            ValueError: Raised when levels are not positive definite
+
+        """
+        super().__init__()
+        self.wavelet_list = []
+        self.mode = mode
+        self.wavs = wavs
+        self.levels = levels
+        if np.isscalar(levels):
+            self.levels = np.ones(len(self.wavs)) * levels
+        for i in range(len(self.wavs)):
+            self.wavelet_list.append(Wavelets_torch(self.wavs[i], self.levels[i], self.mode))
+
+    def dir_op(self, x):
+        """Evaluates a list of forward abstract wavelet transforms of x
+
+        Args:
+
+            x (torch.Tensor): Tensor to wavelet transform
+
+        """
+        buff = []
+        buff.append(self.wavelet_list[0].dir_op(x))
+        for wav_i in range(1, len(self.wavelet_list)):
+            buff.append(self.wavelet_list[wav_i].dir_op(x))
+        return buff
+
+    def adj_op(self, coeffs):
+        """Evaluates a list of forward adjoint abstract wavelet transforms of x
+
+        Args:
+
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                Coefficients to adjoint wavelet transform
+
+        """
+        out = self.wavelet_list[0].adj_op(coeffs[0])
+        for wav_i in range(1, len(self.wavelet_list)):
+            out = out + self.wavelet_list[wav_i].adj_op(coeffs[wav_i])
+        return out  / len(self.wavelet_list)
+
+
+class L1Norm_torch(torch.nn.Module):
+    """This class computes the proximity operator of the l2 ball.
+
+                        f(x) = ||Psi x||_1 * gamma
+
+    When the input 'x' is an array. gamma is a regularization term. Psi is a sparsity operator.
+    """
+
+    def __init__(self, gamma, Psi=None, op_to_coeffs=False):
+        """Initialises an l1-norm proximal operator class
+
+        Args:
+
+            gamma (double >= 0): Regularisation parameter
+            Psi (Linear operator): Regularisation functional (typically wavelets)
+
+        Raises:
+
+            ValueError: Raised if regularisation parameter is not postitive semi-definite
+        """
+        super().__init__()
+        if np.any(gamma <= 0):
+            raise ValueError("'gamma' must be positive semi-definite")
+
+        self.gamma = gamma
+        self.beta = 1.0
+        self.op_to_coeffs = op_to_coeffs
+
+        if Psi is None:
+            self.Psi = Identity()
+            self.num_wavs = 0
+        else:
+            self.Psi = Psi
+            # Set the number of wavelets dictionaries
+            self.num_wavs = len(self.Psi.wavelet_list)
+
+        if self.op_to_coeffs:
+            self.prox = self._prox_coeffs
+            self.fun = self._fun_coeffs
+        else:
+            self.prox = self._prox
+            self.fun = self._fun
+
+
+    def _apply_op_to_coeffs(self, coeffs, op):
+        """Applies operation to all coefficients in ptwt structure.
+        
+        """
+        # Iterate over the wavelet dictionaries
+        for wav_i in range(self.num_wavs):
+            # Apply op over the low freq approx
+            coeffs[wav_i][0] = op(coeffs[wav_i][0])
+            # Iterate over the wavelet decomp and apply op
+            for it1 in range(1, len(coeffs[0])):
+                coeffs[wav_i][it1] = tuple([op(elem) for elem in  coeffs[wav_i][it1]])
+
+        return coeffs
+    
+    
+    
+    def _op_to_two_coeffs(self, coeffs1, coeffs2, op):
+        """Applies operation to two set of coefficients in ptwt structure.
+
+        Saves result in coeffs1.
+
+        Args:
+
+            coeffs1 (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                First set of wavelet coefficients
+            coeffs2 (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                Second set of wavelet coefficients
+            op (function): Operation to apply
+        
+        Returns:
+
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]): 
+                Resulting coefficients
+        """
+        # Iterate over the wavelet dictionaries
+        for wav_i in range(self.num_wavs):
+            # Apply op over the low freq approx
+            coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+            # Iterate over the wavelet decomp and apply op
+            for it1 in range(1, len(coeffs1[0])):
+                coeffs1[wav_i][it1] = tuple(
+                    [op(elem1, elem2) for elem1, elem2 in zip(
+                        coeffs1[wav_i][it1], coeffs2[wav_i][it1]
+                    )]
+                )
+        return coeffs1
+
+    def _get_max_abs_coeffs(self, coeffs):
+        """Get the max abs value of all coefficients
+
+        Args:
+
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                Set of wavelet coefficients
+
+        Returns:
+
+            max abs value of all coefficients
+        """
+        max_val = []
+        # Iterate over the wavelet dictionaries
+        for wav_i in range(self.num_wavs):
+            # Apply op over the low freq approx
+            max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
+            # Iterate over the wavelet decompositions
+            for it1 in range(1, len(coeffs[0])):
+                for it2 in range(len(coeffs[wav_i][it1])):
+                    max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
+
+        # Apply operation to the coefficients
+        return torch.max(torch.tensor(max_val)).item()    
+
+
+    def _prox_coeffs(self, x, tau):
+        """Evaluates the l1-norm prox of Psi x
+
+        Args:
+
+            x (ptwt.coeffs): Array to evaluate proximal projection of
+            tau (double): Custom weighting of l1-norm prox
+
+        Returns:
+
+            l1-norm prox of x
+        """
+        # Define the element-wise operation
+        # op = partial(self._prox, tau=tau)
+        op = lambda _x: self._prox(_x, tau=tau)
+        # Apply operation to the coefficients
+        return self._apply_op_to_coeffs(x, op)
+    
+    def _fun_coeffs(self, coeffs):
+        """Evaluates loss of l1-norm regularisation for coeffs
+
+        Args:
+
+            x (ptwt.coeffs): Array to evaluate proximal projection of
+            tau (double): Custom weighting of l1-norm prox
+
+        Returns:
+
+            l1-norm prox of x
+        """
+        loss = 0
+        # Iterate over the wavelet dictionaries
+        for wav_i in range(self.num_wavs):
+            # Apply op over the low freq approx
+            loss += self._fun(coeffs[wav_i][0])
+            # Iterate over the wavelet decompositions
+            for it1 in range(1, len(coeffs[0])):
+                for it2 in range(len(coeffs[wav_i][it1])):
+                    loss += self._fun(coeffs[wav_i][it1][it2])
+
+        # Apply operation to the coefficients
+        return loss
+
+    def _prox(self, x, tau):
+        """Evaluates the l1-norm prox of x.
+
+        Removed complex valued support.
+
+        Args:
+
+            x (torch.Tensor): Array to evaluate proximal projection of
+            tau (double): Custom weighting of l1-norm prox
+
+        Returns:
+
+            l1-norm prox of x
+        """
+        return torch.maximum(
+                torch.zeros_like(x), torch.abs(x) - self.gamma * tau
+            ) * torch.sign(x)
+        # return torch.real(
+        #     torch.maximum(
+        #         torch.zeros_like(x), torch.abs(x) - self.gamma * tau
+        #     ) * torch.exp(
+        #         torch.complex(torch.tensor(0.), torch.tensor(1.)) * torch.angle(x)
+        #     )
+        # )
+
+
+    def _fun(self, x):
+        """Evaluates loss of functional term of l1-norm regularisation
+
+        Args:
+
+            x (torch.Tensor): Tensor to evaluate loss of
+
+        Returns:
+
+            l1-norm loss
+        """
+        return torch.sum(torch.abs(self.gamma * x))
+
+    def dir_op(self, x):
+        """Evaluates the forward regularisation operator
+
+        Args:
+
+            x (torch.Tensor): Tensor to forward transform
+
+        Returns:
+
+            Forward regularisation operator applied to x
+        """
+        return self.Psi.dir_op(x)
+
+    def adj_op(self, x):
+        """Evaluates the forward adjoint regularisation operator
+
+        Args:
+
+            x (torch.Tensor): Tensor to adjoint transform
+
+        Returns:
+
+            Forward adjoint regularisation operator applied to x
+        """
+        return self.Psi.adj_op(x)
 
