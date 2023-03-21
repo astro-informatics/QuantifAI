@@ -1,7 +1,67 @@
 import numpy as np
 import logging
+import skimage as ski
 
 logger = logging.getLogger("Optimus Primal")
+
+
+def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.01):
+    """Compute uncertainty quantification stats.
+
+    Args:
+
+        MC_X_array (np.ndarray): Array with generated samples. Shape=(n_samples, nx, ny)
+        superpix_sizes (list[int]): Superpixel sizes.
+        alpha (float): Probability to compute the quantiles at `alpha` and `1-alpha`.
+
+    Returns:
+
+        quantiles (list(np.ndarray)): List corresponding to the superpix sizes. 
+            For each element we have the two computed quantiles, `alpha` and `1-alpha`.
+        st_dev_down (list(np.ndarray)): List corresponding to the superpix sizes. 
+            For each element we have the standard deviation of each superpixel along the samples.
+        means_list (list(np.ndarray)): List corresponding to the superpix sizes. 
+            For each element we have the mean of each superpixel along the samples.
+    """
+
+
+    n_samples = MC_X_array.shape[0]
+    nx = MC_X_array.shape[1]
+    ny = MC_X_array.shape[2]
+
+    quantiles = []
+    means_list = []
+    st_dev_down = []
+
+    p = np.array([alpha, 1-alpha])
+
+    for k, block_size  in enumerate(superpix_sizes):
+        
+        downsample_array= np.zeros([
+            n_samples,
+            np.int64(np.floor(nx/block_size)),
+            np.int64(np.floor(ny/block_size))
+        ])
+
+        for j in range(n_samples):
+            block_image = ski.measure.block_reduce(
+                MC_X_array[j], block_size=(block_size, block_size), func=np.mean
+            )
+            if nx % block_size == 0:
+                downsample_array[j] = block_image
+            else:
+                downsample_array[j] = block_image[:-1,:-1]
+
+        # Compute quantiles for LCI
+        quantiles.append(np.quantile(downsample_array, p, axis=0))
+        # Compute pixel SD
+        meanSample_down = np.mean(downsample_array, 0)
+        second_moment_down = np.mean(downsample_array**2, 0)
+        st_dev_down.append(np.sqrt(second_moment_down - meanSample_down**2))
+        # Save the mean images
+        means_list.append(meanSample_down)
+
+    return quantiles, st_dev_down, means_list
 
 
 def bisection_method(function, start_interval, iters, tol):
