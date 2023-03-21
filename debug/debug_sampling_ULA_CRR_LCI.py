@@ -23,7 +23,7 @@ from large_scale_UQ.utils import to_numpy, to_tensor
 from convex_reg import utils as utils_cvx_reg
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 print(torch.cuda.is_available())
 print(torch.cuda.device_count())
@@ -100,7 +100,7 @@ x_init = torch.abs(phi.adj_op(torch_y))
 
 # %%
 
-g = luq.operators.l2_norm_torch(
+g = luq.operators.L2Norm_torch(
     sigma=sigma,
     data=torch_y,
     Phi=phi,
@@ -140,13 +140,13 @@ print(f"Lipschitz bound {L:.3f}")
 # %%
 
 # Iterate over
-my_lmbda = [2.5e3, 5e3, 1e4, 2e4, 5e4]
-my_frac_delta = [0.1, 0.2, 0.5]
+my_lmbda = [2.5e3]#, 5e3, 1e4, 2e4, 5e4]
+my_frac_delta = [0.1]#, 0.2, 0.5]
 
 # Sampling alg params
 frac_burnin = 0.2
-n_samples = np.int64(1e3)
-thinning = np.int64(1e3)
+n_samples = np.int64(1e2)#(1e3)
+thinning = np.int64(1e2)#(1e3)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 
 for it in range(len(my_lmbda)):
