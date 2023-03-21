@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import arviz
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from statsmodels.graphics.tsaplots import plot_acf
 
 
@@ -180,6 +181,99 @@ def autocor_plots(X_chain, var, method_str, nLags=100, save_path=None):
     ax.set_xlabel("lags")
     ax.set_ylim([-1.1,1.3])
     ax.legend(handles=handles, labels=labels,loc='best',shadow=True, numpoints=1)
+
+    if save_path is not None:
+        plt.savefig(save_path)
+
+
+def plot_summaries(
+        x_ground_truth,
+        x_dirty,
+        post_meanvar,
+        post_meanvar_absfourier,
+        save_path=None
+):
+    """Plot summaries of the sampling results.
+    
+    Args:
+        x_ground_truth (np.ndarray): Ground truth image.
+        x_dirty (np.ndarray): Dirty image.
+        post_meanvar (welford instance): Instance of welford with torch variables
+            saving the MC samples.
+        post_meanvar_absfourier (welford instance): Instance of welford with 
+        torch variables saving the absolute values of Fourier coefficients of MC samples.
+        save_path (str): Path to save the figure. If None, the figure is not saved.
+    """
+    
+    post_mean_numpy = post_meanvar.get_mean().detach().cpu().squeeze().numpy()
+    post_var_numpy = post_meanvar.get_var().detach().cpu().squeeze().numpy()
+
+    fig, axes = plt.subplots(nrows=2, ncols=4, figsize = (18,10))
+    fig.tight_layout(pad=.01)
+    
+    # --- Ground truth
+    im = axes[0,0].imshow(x_ground_truth, cmap="gray")
+    axes[0,0].set_title('Ground truth image')
+    axes[0,0].axis('off')
+    divider = make_axes_locatable(axes[0,0])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+
+    # --- Blurred
+    im = axes[0,1].imshow(x_dirty, cmap="gray")
+    axes[0,1].set_title('Dirty image')
+    axes[0,1].axis('off')
+    divider = make_axes_locatable(axes[0,1])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+
+    # --- MMSE
+    im = axes[0,2].imshow(post_mean_numpy, cmap="gray")
+    axes[0,2].set_title('x - posterior mean')
+    axes[0,2].axis('off')
+    divider = make_axes_locatable(axes[0,2])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+
+    # --- Variance
+    im = axes[0,3].imshow(post_var_numpy, cmap="gray")
+    axes[0,3].set_title('x - posterior variance')
+    axes[0,3].axis('off')
+    divider = make_axes_locatable(axes[0,3])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+
+    # --- MMSE / Var
+    im = axes[1,0].imshow(post_mean_numpy/np.sqrt(post_meanvar.get_var().detach().cpu().squeeze().numpy()), cmap="gray")
+    axes[1,0].set_title('x - posterior mean/posterior SD')
+    axes[1,0].axis('off')
+    divider = make_axes_locatable(axes[1,0])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+
+    # --- Var / MMSE
+    im = axes[1,1].imshow(np.sqrt(post_var_numpy)/post_mean_numpy,cmap="gray")
+    axes[1,1].set_title('x - Coefs of variation')
+    axes[1,1].axis('off')
+    divider = make_axes_locatable(axes[1,1])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+
+    # --- Mean Fourier coefs
+    im = axes[1,2].imshow(torch.log(post_meanvar_absfourier.get_mean()).detach().cpu().squeeze().numpy())
+    axes[1,2].set_title('Mean coefs (log-scale)')
+    axes[1,2].axis('off')
+    divider = make_axes_locatable(axes[1,2])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+    
+    # --- Variance Fourier coefs
+    im = axes[1,3].imshow(torch.log(post_meanvar_absfourier.get_var()).detach().cpu().squeeze().numpy())
+    axes[1,3].set_title('Var coefs (log-scale)')
+    axes[1,3].axis('off')
+    divider = make_axes_locatable(axes[1,3])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
 
     if save_path is not None:
         plt.savefig(save_path)
