@@ -191,6 +191,7 @@ def plot_summaries(
         x_dirty,
         post_meanvar,
         post_meanvar_absfourier,
+        cmap='gray',
         save_path=None
 ):
     """Plot summaries of the sampling results.
@@ -212,7 +213,7 @@ def plot_summaries(
     fig.tight_layout(pad=.01)
     
     # --- Ground truth
-    im = axes[0,0].imshow(x_ground_truth, cmap="gray")
+    im = axes[0,0].imshow(x_ground_truth, cmap=cmap)
     axes[0,0].set_title('Ground truth image')
     axes[0,0].axis('off')
     divider = make_axes_locatable(axes[0,0])
@@ -220,7 +221,7 @@ def plot_summaries(
     fig.colorbar(im, cax=cax, orientation='vertical')
 
     # --- Blurred
-    im = axes[0,1].imshow(x_dirty, cmap="gray")
+    im = axes[0,1].imshow(x_dirty, cmap=cmap)
     axes[0,1].set_title('Dirty image')
     axes[0,1].axis('off')
     divider = make_axes_locatable(axes[0,1])
@@ -228,7 +229,7 @@ def plot_summaries(
     fig.colorbar(im, cax=cax, orientation='vertical')
 
     # --- MMSE
-    im = axes[0,2].imshow(post_mean_numpy, cmap="gray")
+    im = axes[0,2].imshow(post_mean_numpy, cmap=cmap)
     axes[0,2].set_title('x - posterior mean')
     axes[0,2].axis('off')
     divider = make_axes_locatable(axes[0,2])
@@ -236,7 +237,7 @@ def plot_summaries(
     fig.colorbar(im, cax=cax, orientation='vertical')
 
     # --- Variance
-    im = axes[0,3].imshow(post_var_numpy, cmap="gray")
+    im = axes[0,3].imshow(post_var_numpy, cmap=cmap)
     axes[0,3].set_title('x - posterior variance')
     axes[0,3].axis('off')
     divider = make_axes_locatable(axes[0,3])
@@ -244,7 +245,7 @@ def plot_summaries(
     fig.colorbar(im, cax=cax, orientation='vertical')
 
     # --- MMSE / Var
-    im = axes[1,0].imshow(post_mean_numpy/np.sqrt(post_meanvar.get_var().detach().cpu().squeeze().numpy()), cmap="gray")
+    im = axes[1,0].imshow(post_mean_numpy/np.sqrt(post_meanvar.get_var().detach().cpu().squeeze().numpy()), cmap=cmap)
     axes[1,0].set_title('x - posterior mean/posterior SD')
     axes[1,0].axis('off')
     divider = make_axes_locatable(axes[1,0])
@@ -252,7 +253,7 @@ def plot_summaries(
     fig.colorbar(im, cax=cax, orientation='vertical')
 
     # --- Var / MMSE
-    im = axes[1,1].imshow(np.sqrt(post_var_numpy)/post_mean_numpy,cmap="gray")
+    im = axes[1,1].imshow(np.sqrt(post_var_numpy)/post_mean_numpy,cmap=cmap)
     axes[1,1].set_title('x - Coefs of variation')
     axes[1,1].axis('off')
     divider = make_axes_locatable(axes[1,1])
