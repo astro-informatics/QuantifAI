@@ -7,6 +7,14 @@ import math
 from tqdm import tqdm
 import time as time
 
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
+
+print(torch.cuda.is_available())
+print(torch.cuda.device_count())
+print(torch.cuda.current_device())
+print(torch.cuda.get_device_name(torch.cuda.current_device()))
+
+
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from torchmetrics.functional import structural_similarity_index_measure 
@@ -23,12 +31,6 @@ from large_scale_UQ.utils import to_numpy, to_tensor
 from convex_reg import utils as utils_cvx_reg
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
-
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
-print(torch.cuda.current_device())
-print(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
 # %%
@@ -100,7 +102,7 @@ x_init = torch.abs(phi.adj_op(torch_y))
 
 # %%
 
-g = luq.operators.l2_norm_torch(
+g = luq.operators.L2Norm_torch(
     sigma=sigma,
     data=torch_y,
     Phi=phi,
@@ -373,10 +375,14 @@ for it in range(len(my_lmbda)):
         params = {
             'maxit': maxit,
             'n_samples': n_samples,
+            'thinning': thinning,
+            'frac_burnin': frac_burnin,
             'gamma': gamma,
             'frac_delta': frac_delta,
             'mu': mu,
             'lmbd': lmbd,
+            'superpix_sizes': np.array(superpix_sizes),
+            'alpha_prob': alpha_prob,
         }
         save_vars = {
             'X_ground_truth': torch_img.detach().cpu().squeeze().numpy(),
@@ -384,6 +390,7 @@ for it in range(len(my_lmbda)):
             'X_MAP': np_x_hat,
             'X_MMSE': np.mean(MC_X, axis=0),
             'post_meanvar': post_meanvar,
+            'absfouriercoeff': absfouriercoeff,
             'MC_X': MC_X,
             'logpi_thinning_trace': logpi_thinning_trace,
             'X': to_numpy(X),
@@ -406,6 +413,7 @@ for it in range(len(my_lmbda)):
             x_dirty=x_init.detach().cpu().squeeze().numpy(),
             post_meanvar=post_meanvar,
             post_meanvar_absfourier=absfouriercoeff,
+            cmap=cmap,
             save_path=savefig_dir+save_prefix+'_summary_plots.pdf'
         )
 
