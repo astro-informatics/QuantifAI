@@ -752,15 +752,14 @@ class L1Norm_torch(torch.nn.Module):
         abs_x = torch.abs(x)
         return torch.maximum(
                 torch.zeros_like(abs_x), abs_x - self.gamma * tau
-            ) * (x / abs_x)
-
-        # return torch.real(
-        #     torch.maximum(
+            ) * torch.nan_to_num(x / abs_x, nan=0.0)
+ 
+        # return torch.maximum(
         #         torch.zeros_like(x), torch.abs(x) - self.gamma * tau
         #     ) * torch.exp(
         #         torch.complex(torch.tensor(0.), torch.tensor(1.)) * torch.angle(x)
         #     )
-        # )
+
 
 
     def _fun(self, x):
