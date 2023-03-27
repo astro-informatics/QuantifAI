@@ -40,8 +40,8 @@ from convex_reg import utils as utils_cvx_reg
 # Optimisation options for the MAP estimation
 options = {"tol": 1e-5, "iter": 2500, "update_iter": 50, "record_iters": False}
 # Save param
-# repo_dir = '/disk/xray0/tl3/repos/large-scale-UQ'
-repo_dir = '/Users/tl/Documents/research/repos/proj-convex-UQ/large-scale-UQ'
+repo_dir = '/disk/xray0/tl3/repos/large-scale-UQ'
+# repo_dir = '/Users/tl/Documents/research/repos/proj-convex-UQ/large-scale-UQ'
 save_dir = repo_dir + '/debug/sampling-outputs/'
 
 
@@ -71,7 +71,7 @@ mat_mask = np.reshape(np.sum(op_mask, axis=0), (256,256), order='F').astype(bool
 
 # %%
 
-torch_img = torch.tensor(np.copy(img), dtype=torch.float, device=device).reshape((1,1) + img.shape)
+torch_img = torch.tensor(np.copy(img), dtype=torch.float64, device=device).reshape((1,1) + img.shape)
 
 # %%
 dim = 256
@@ -95,7 +95,7 @@ n = rng.normal(0, sigma, y[y!=0].shape)
 y[y!=0] += n
 
 # Observation
-torch_y = torch.tensor(np.copy(y), device=device).reshape((1,) + img.shape)
+torch_y = torch.tensor(np.copy(y), device=device, dtype=torch.complex128).reshape((1,) + img.shape)
 x_init = torch.abs(phi.adj_op(torch_y))
 
 
@@ -117,9 +117,12 @@ reg_param = 2.e-3
 psi = luq.operators.DictionaryWv_torch(wavs_list, levels)
 
 h = luq.operators.L1Norm_torch(1., psi, op_to_coeffs=True)
-gamma = h._get_max_abs_coeffs(h.dir_op(torch.clone(torch_y))) * reg_param
+gamma = h._get_max_abs_coeffs(h.dir_op(torch.clone(x_init))) * reg_param
 h.gamma = gamma
 h.beta = 1.0
+
+f = luq.operators.RealProx_torch()
+# f=None
 
 alpha = 1. / (1. + g.beta)
 
@@ -127,7 +130,7 @@ x_hat, diagnostics = luq.optim.FB_torch(
     x_init,
     options=options,
     g=g,
-    f=None,
+    f=f,
     h=h,
     alpha=alpha,
     tau=1.,
