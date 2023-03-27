@@ -495,10 +495,14 @@ class Wavelets_torch(torch.nn.Module):
 
             ValueError: Raised when the shape of x is not even in every dimension
         """
-
-        return ptwt.wavedec2(
-            x, wavelet=self.wav, level=self.levels, mode=self.mode
-        )
+        if x.dim() >= 4:
+            return ptwt.wavedec2(
+                x.squeeze(1), wavelet=self.wav, level=self.levels, mode=self.mode
+            )
+        else:
+            return ptwt.wavedec2(
+                x, wavelet=self.wav, level=self.levels, mode=self.mode
+            )
 
     def adj_op(self, coeffs):
         """Evaluates the forward adjoint abstract wavelet transform of x
@@ -735,8 +739,6 @@ class L1Norm_torch(torch.nn.Module):
     def _prox(self, x, tau):
         """Evaluates the l1-norm prox of x.
 
-        Removed complex valued support.
-
         Args:
 
             x (torch.Tensor): Array to evaluate proximal projection of
@@ -746,9 +748,12 @@ class L1Norm_torch(torch.nn.Module):
 
             l1-norm prox of x
         """
+        # Replaced the use of torch.sign() to add complex value support
+        abs_x = torch.abs(x)
         return torch.maximum(
-                torch.zeros_like(x), torch.abs(x) - self.gamma * tau
-            ) * torch.sign(x)
+                torch.zeros_like(abs_x), abs_x - self.gamma * tau
+            ) * (x / abs_x)
+
         # return torch.real(
         #     torch.maximum(
         #         torch.zeros_like(x), torch.abs(x) - self.gamma * tau
