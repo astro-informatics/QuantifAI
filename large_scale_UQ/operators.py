@@ -802,3 +802,71 @@ class L1Norm_torch(torch.nn.Module):
         """
         return self.Psi.adj_op(x)
 
+
+class RealProx_torch(torch.nn.Module):
+    """This class computes the proximity operator of the indicator function for
+    reality.
+
+                        f(x) = (Re{x} == x) ? 0. : infty
+    it returns the projection.
+    """
+
+    def __init__(self):
+        """
+        Initialises a real half-plane proximal operator class
+        """
+        super().__init__()
+        self.beta = 1.0
+
+    def prox(self, x, tau):
+        """Evaluates the real half-plane projection of x
+
+        Args:
+
+            x (torch.tensor): Array to evaluate proximal projection of
+
+        Returns:
+
+            real half-plane projection of x
+        """
+        return torch.real(x)
+
+    def fun(self, x):
+        """Evaluates loss of functional term
+
+        Args:
+
+            x (torch.tensor): Array to evaluate loss of
+
+        Returns:
+
+            0
+        """
+        return 0.0
+
+    def dir_op(self, x):
+        """Evaluates the forward operator
+
+        Args:
+
+            x (torch.tensor): Array to forward transform
+
+        Returns:
+
+            Forward operator applied to x
+        """
+        return x
+
+    def adj_op(self, x):
+        """Evaluates the forward adjoint operator
+
+        Args:
+
+            x (torch.tensor): Array to forward adjoint transform
+
+        Returns:
+
+            Forward adjoint operator applied to x
+        """
+        return x
+
