@@ -104,7 +104,7 @@ def bisection_method(function, start_interval, iters, tol):
 
 
 def create_local_credible_interval(
-    x_sol, region_size, function, bound, iters, tol, bottom, top
+    x_sol, region_size, function, bound, iters, tol, bottom, top, verbose=0.
 ):
     """Bisection method for finding credible intervals
 
@@ -158,15 +158,17 @@ def create_local_credible_interval(
                     ) 
 
                 error_m[i, j] = -bisection_method(obj, [0, -bottom], iters, tol) + x_sum
-                print(
-                    "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s"%(
-                        i,
-                        j,
-                        error_m[i, j],
-                        error_p[i, j],
-                        x_sum,
+                
+                if verbose > 0.:
+                    print(
+                        "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s"%(
+                            i,
+                            j,
+                            error_m[i, j],
+                            error_p[i, j],
+                            x_sum,
+                        )
                     )
-                )
     else:
         region[:region_size] = 1.0
         dsizey = int(x_sol.shape[0] / region_size)
@@ -187,14 +189,16 @@ def create_local_credible_interval(
                 return function(x_sol * (1.0 - mask) - eta * mask) - bound
 
             error_m[i] = -bisection_method(obj, [0, -bottom], iters, tol)
-            print(
-                "[Credible Interval] %s has interval (%s, %s) with sum %s"%(
-                    i,
-                    error_m[i],
-                    error_p[i],
-                    x_sum,
+            
+            if verbose > 0.:
+                print(
+                    "[Credible Interval] %s has interval (%s, %s) with sum %s"%(
+                        i,
+                        error_m[i],
+                        error_p[i],
+                        x_sum,
+                    )
                 )
-            )
     return error_p, error_m, mean
 
 
