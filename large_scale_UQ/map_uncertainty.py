@@ -2,7 +2,7 @@ import numpy as np
 import logging
 import skimage as ski
 
-logger = logging.getLogger("Optimus Primal")
+# logger = logging.getLogger("Optimus Primal")
 
 
 def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.01):
@@ -85,7 +85,7 @@ def bisection_method(function, start_interval, iters, tol):
     if np.allclose(eta1, eta2, 1e-12):
         return eta1
     if np.sign(function(eta1)) == np.sign(function(eta2)):
-        logger.info("[Bisection Method] There is no root in this range.")
+        print("[Bisection Method] There is no root in this range.")
         val = np.argmin(np.abs([eta1, eta2]))
         return [eta1, eta2][val]
     for i in range(int(iters)):
@@ -93,8 +93,8 @@ def bisection_method(function, start_interval, iters, tol):
         eta3 = (eta2 + eta1) * 0.5
         obj3 = function(eta3)
         if np.abs(eta1 - eta3) / np.abs(eta3) < tol:
-            if np.abs(obj3) < tol:
-                return eta3
+            # if np.abs(obj3) < tol:
+            return eta3
         if np.sign(obj1) == np.sign(obj3):
             eta1 = eta3
         else:
@@ -125,7 +125,7 @@ def create_local_credible_interval(
     """
 
     region = np.zeros(x_sol.shape)
-    logger.info("Calculating credible interval for %s superpxiels.", region.shape)
+    print("Calculating credible interval for superpxiel: ", region.shape)
     if len(x_sol.shape) > 1:
         region[:region_size, :region_size] = 1.0
         dsizey, dsizex = int(x_sol.shape[0] / region_size), int(
@@ -158,13 +158,14 @@ def create_local_credible_interval(
                     ) 
 
                 error_m[i, j] = -bisection_method(obj, [0, -bottom], iters, tol) + x_sum
-                logger.info(
-                    "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s",
-                    i,
-                    j,
-                    error_m[i, j],
-                    error_p[i, j],
-                    x_sum,
+                print(
+                    "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s"%(
+                        i,
+                        j,
+                        error_m[i, j],
+                        error_p[i, j],
+                        x_sum,
+                    )
                 )
     else:
         region[:region_size] = 1.0
@@ -186,12 +187,13 @@ def create_local_credible_interval(
                 return function(x_sol * (1.0 - mask) - eta * mask) - bound
 
             error_m[i] = -bisection_method(obj, [0, -bottom], iters, tol)
-            logger.info(
-                "[Credible Interval] %s has interval (%s, %s) with sum %s",
-                i,
-                error_m[i],
-                error_p[i],
-                x_sum,
+            print(
+                "[Credible Interval] %s has interval (%s, %s) with sum %s"%(
+                    i,
+                    error_m[i],
+                    error_p[i],
+                    x_sum,
+                )
             )
     return error_p, error_m, mean
 
@@ -220,7 +222,7 @@ def create_local_credible_interval_fast(
     """
 
     region = np.zeros(x_sol.shape)
-    logger.info("Calculating credible interval for %s superpxiels.", region.shape)
+    print("Calculating credible interval for superpxiels: ", region.shape)
     if len(x_sol.shape) > 1:
         dsizey, dsizex = int(x_sol.shape[0] / region_size), int(
             x_sol.shape[1] / region_size
@@ -259,7 +261,7 @@ def create_local_credible_interval_fast(
                     )
 
                 error_m[i, j] = -bisection_method(obj, [0, -bottom], iters, tol)
-                logger.info(
+                print(
                     "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s",
                     i,
                     j,
@@ -287,7 +289,7 @@ def create_local_credible_interval_fast(
                 return function(x_sol * (1.0 - mask) - eta * mask) - bound
 
             error_m[i] = -bisection_method(obj, [0, -bottom], iters, tol)
-            logger.info(
+            print(
                 "[Credible Interval] %s has interval (%s, %s) with sum %s",
                 i,
                 error_m[i],
