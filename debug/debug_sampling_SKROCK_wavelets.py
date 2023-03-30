@@ -12,15 +12,13 @@ M1 = False
 if M1:
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 else:
-    os.environ["CUDA_VISIBLE_DEVICES"]="1"
+    os.environ["CUDA_VISIBLE_DEVICES"]="0"
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if torch.cuda.is_available():
         print(torch.cuda.is_available())
         print(torch.cuda.device_count())
         print(torch.cuda.current_device())
         print(torch.cuda.get_device_name(torch.cuda.current_device()))
-
-
 
 
 from skimage.metrics import peak_signal_noise_ratio as psnr
@@ -132,9 +130,12 @@ levels = 4
 # Sampling alg params
 frac_burnin = 0.2
 n_samples = np.int64(1e3)
-thinning = np.int64(1e3)
+thinning = np.int64(1e2)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 
+nStages = 10
+eta = 0.05
+dt_perc = 0.99
 
 
 for it_param, reg_param in enumerate(reg_params):
@@ -190,7 +191,7 @@ for it_param, reg_param in enumerate(reg_params):
             print(labels[i])
         axs[i].set_title(labels[i], fontsize=16)
         axs[i].axis('off')
-    plt.savefig('{:s}{:s}_MYULA_wavelets_reg_param_{:.1e}_optim_MAP.pdf'.format(savefig_dir, img_name, reg_param))
+    plt.savefig('{:s}{:s}_SKROCK_wavelets_reg_param_{:.1e}_optim_MAP.pdf'.format(savefig_dir, img_name, reg_param))
     plt.close()
 
     for it_2 in range(len(my_frac_delta)):
@@ -198,7 +199,7 @@ for it_param, reg_param in enumerate(reg_params):
         frac_delta = my_frac_delta[it_2]
 
         # Define prefix
-        save_prefix = 'MYULA_wavelets_frac_delta_{:.1e}_reg_param_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
+        save_prefix = 'SKROCK_wavelets_frac_delta_{:.1e}_reg_param_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
             frac_delta, reg_param, n_samples, thinning, frac_burnin
         )
 
@@ -219,7 +220,6 @@ for it_param, reg_param in enumerate(reg_params):
         print('lmbd: ', lmbd)
         print('prox thresh: ', h.gamma*lmbd)
 
-
         fun_prior = lambda _x : h._fun_coeffs(h.dir_op(_x))
 
         sub_op = lambda _x1, _x2 : _x1 - _x2
@@ -228,11 +228,13 @@ for it_param, reg_param in enumerate(reg_params):
             h.dir_op(torch.clone(_x)), sub_op
         ))
 
+        grad_prior = lambda _x, lmbd: (_x - prox_prior_cai(_x, lmbd)) / lmbd 
+
         # Define posterior and gradient
         logPi = lambda _z :  fun_likelihood(_z) + fun_prior(_z)
-
-        def MYULA_kernel_2(X, delta, lmbd, grad_likelihood, prox_prior):
-            return torch.real((1. - (delta/lmbd)) * torch.clone(X) - delta * grad_likelihood(torch.clone(X)) + (delta/lmbd) * prox_prior(X, lmbd)) + math.sqrt(2*delta) * torch.randn_like(X)
+        grad_likelihood_prior = lambda _x : torch.real(
+            grad_likelihood(_x) + grad_prior(_x, lmbd)
+        )
 
 
         # Sampling alg params
@@ -253,8 +255,10 @@ for it_param, reg_param in enumerate(reg_params):
         for i_x in tqdm(range(maxit)):
 
             # Update X
-            # X = luq.sampling.ULA_kernel(X, delta, grad_likelihood_prior)
-            X = MYULA_kernel_2(X, delta, lmbd, grad_likelihood, prox_prior_cai)
+            X = luq.sampling.SKROCK_kernel(
+                X, Lipschitz_U=L, nStages=nStages, eta=eta, dt_perc=dt_perc,
+                grad_likelihood_prior=grad_likelihood_prior
+            )
 
             if i_x == burnin:
                 # Initialise recording of sample summary statistics after burnin period
