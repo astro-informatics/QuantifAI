@@ -12,7 +12,7 @@ M1 = False
 if M1:
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 else:
-    os.environ["CUDA_VISIBLE_DEVICES"]="2"
+    os.environ["CUDA_VISIBLE_DEVICES"]="1"
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if torch.cuda.is_available():
         print(torch.cuda.is_available())
@@ -123,7 +123,7 @@ f = luq.operators.RealProx_torch()
 
 # Iterate over
 my_frac_delta = [0.9] # [0.1, 0.2, 0.5]
-reg_params = [2e-3, 2e-2]# [1e-3, 2e-3, 5e-3, 1e-2, 2e-2]
+reg_params = [2e-2]# [1e-3, 2e-3, 5e-3, 1e-2, 2e-2]
 
 # Wavelet parameters
 wavs_list = ['db8']
@@ -131,8 +131,8 @@ levels = 4
 
 # Sampling alg params
 frac_burnin = 0.2
-n_samples = np.int64(4e3)
-thinning = np.int64(5e2)
+n_samples = np.int64(2e3)
+thinning = np.int64(1e3)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 
 
@@ -206,26 +206,34 @@ for it_param, reg_param in enumerate(reg_params):
         # Define likelihood functions
         fun_likelihood = lambda _x : g.fun(_x)
         grad_likelihood = lambda _x : g.grad(_x)
-        L_likelihood = g.beta
 
-        # Define prior
-        lambda_prox = 1. / L_likelihood
-        lambd_frac = 0.99
-        lambd = lambda_prox * lambd_frac
+        # Define sampling parameters
+        L_likelihood = g.beta
+        lmbd = 0.99 / L_likelihood
+        # Compute total Lipschitz constant and ste-size
+        L_g = 1 / lmbd
+        L = L_g + L_likelihood
+        delta = frac_delta / L
+
+        print('delta', delta)
+        print('lmbd: ', lmbd)
+        print('prox thresh: ', h.gamma*lmbd)
+
 
         fun_prior = lambda _x : h._fun_coeffs(h.dir_op(_x))
 
-        prox_prior = lambda _x: h.adj_op(h.prox(h.dir_op(torch.clone(_x)), lambd))
-        grad_prior = lambda _x: (_x - prox_prior(_x)) / lambd 
+        sub_op = lambda _x1, _x2 : _x1 - _x2
+        prox_prior_cai = lambda _x, lmbd : h.adj_op(h._op_to_two_coeffs(
+            h.prox(h.dir_op(torch.clone(_x)), lmbd),
+            h.dir_op(torch.clone(_x)), sub_op
+        ))
 
         # Define posterior and gradient
         logPi = lambda _z :  fun_likelihood(_z) + fun_prior(_z)
-        grad_likelihood_prior = lambda _x : torch.real(grad_likelihood(_x) + grad_prior(_x))
 
-        # Compute total Lipschitz constant and ste-size
-        L_prior = 1 / lambd
-        L = L_likelihood + L_prior
-        delta = 1. * frac_delta / L
+        def MYULA_kernel_2(X, delta, lmbd, grad_likelihood, prox_prior):
+            return torch.real((1. - (delta/lmbd)) * torch.clone(X) - delta * grad_likelihood(torch.clone(X)) + (delta/lmbd) * prox_prior(X, lmbd)) + math.sqrt(2*delta) * torch.randn_like(X)
+
 
         # Sampling alg params
         burnin = np.int64(n_samples * thinning * frac_burnin)
@@ -245,7 +253,8 @@ for it_param, reg_param in enumerate(reg_params):
         for i_x in tqdm(range(maxit)):
 
             # Update X
-            X = luq.sampling.ULA_kernel(X, delta, grad_likelihood_prior)
+            # X = luq.sampling.ULA_kernel(X, delta, grad_likelihood_prior)
+            X = MYULA_kernel_2(X, delta, lmbd, grad_likelihood, prox_prior_cai)
 
             if i_x == burnin:
                 # Initialise recording of sample summary statistics after burnin period
