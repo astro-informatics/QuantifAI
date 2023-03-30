@@ -426,7 +426,7 @@ class L2Norm_torch(torch.nn.Module):
             Gradient of the l2_norm expression
 
         """
-        return self.Phi.adj_op((self.Phi.dir_op(x) - self.data)) / (
+        return - self.Phi.adj_op((self.data - self.Phi.dir_op(x))) / (
             self.sigma ** 2
         )
 
