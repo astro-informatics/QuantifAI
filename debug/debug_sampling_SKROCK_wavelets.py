@@ -347,7 +347,7 @@ for it_param, reg_param in enumerate(reg_params):
             'gamma': gamma,
             'frac_delta': frac_delta,
             'reg_param': reg_param,
-            'lambd_frac': lambd_frac,
+            # 'lambd_frac': lambd_frac,
             'superpix_sizes': np.array(superpix_sizes),
             'alpha_prob': alpha_prob,
         }
