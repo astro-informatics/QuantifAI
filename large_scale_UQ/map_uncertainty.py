@@ -5,19 +5,19 @@ import skimage as ski
 # logger = logging.getLogger("Optimus Primal")
 
 
-def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.01):
+def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.05):
     """Compute uncertainty quantification stats.
 
     Args:
 
         MC_X_array (np.ndarray): Array with generated samples. Shape=(n_samples, nx, ny)
         superpix_sizes (list[int]): Superpixel sizes.
-        alpha (float): Probability to compute the quantiles at `alpha` and `1-alpha`.
+        alpha (float): Probability to compute the quantiles at `alpha/2` and `1-alpha/2`.
 
     Returns:
 
         quantiles (list(np.ndarray)): List corresponding to the superpix sizes. 
-            For each element we have the two computed quantiles, `alpha` and `1-alpha`.
+            For each element we have the two computed quantiles, `alpha/2` and `1-alpha/2`.
         st_dev_down (list(np.ndarray)): List corresponding to the superpix sizes. 
             For each element we have the standard deviation of each superpixel along the samples.
         means_list (list(np.ndarray)): List corresponding to the superpix sizes. 
@@ -33,7 +33,7 @@ def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.01):
     means_list = []
     st_dev_down = []
 
-    p = np.array([alpha, 1-alpha])
+    p = np.array([alpha/2, 1-alpha/2])
 
     for k, block_size  in enumerate(superpix_sizes):
         
