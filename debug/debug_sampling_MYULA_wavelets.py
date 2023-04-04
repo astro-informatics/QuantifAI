@@ -12,7 +12,7 @@ M1 = False
 if M1:
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 else:
-    os.environ["CUDA_VISIBLE_DEVICES"]="1"
+    os.environ["CUDA_VISIBLE_DEVICES"]="2"
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if torch.cuda.is_available():
         print(torch.cuda.is_available())
@@ -122,8 +122,8 @@ f = luq.operators.RealProx_torch()
 # %%
 
 # Iterate over
-my_frac_delta = [0.9] # [0.1, 0.2, 0.5]
-reg_params = [2e-3, 2e-2]# [1e-3, 2e-3, 5e-3, 1e-2, 2e-2]
+my_frac_delta = [0.5] # [0.1, 0.2, 0.5]
+reg_params = [5e-3] #, 2e-2]# [1e-3, 2e-3, 5e-3, 1e-2, 2e-2]
 
 # Wavelet parameters
 wavs_list = ['db8']
@@ -131,8 +131,8 @@ levels = 4
 
 # Sampling alg params
 frac_burnin = 0.2
-n_samples = np.int64(1e3)
-thinning = np.int64(1e3)
+n_samples = np.int64(1e4)
+thinning = np.int64(5e1)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 
 
@@ -197,11 +197,6 @@ for it_param, reg_param in enumerate(reg_params):
         #step size for ULA
         frac_delta = my_frac_delta[it_2]
 
-        # Define prefix
-        save_prefix = 'MYULA_wavelets_frac_delta_{:.1e}_reg_param_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
-            frac_delta, reg_param, n_samples, thinning, frac_burnin
-        )
-
         #function handles to used for ULA
         # Define likelihood functions
         fun_likelihood = lambda _x : g.fun(_x)
@@ -209,21 +204,28 @@ for it_param, reg_param in enumerate(reg_params):
 
         # Define sampling parameters
         L_likelihood = g.beta
-        lmbd = 0.99 / L_likelihood
-        # Compute total Lipschitz constant and ste-size
-        L_g = 1 / lmbd
-        L = L_g + L_likelihood
-        delta = frac_delta / L
+        # lmbd = 0.99 / L_likelihood
+        # # Compute total Lipschitz constant and ste-size
+        # L_g = 1 / lmbd
+        # L = L_g + L_likelihood
+        # delta = frac_delta / L
+        reg_param_sampling = 10.
+        gamma = h._get_max_abs_coeffs(h.dir_op(torch.clone(x_init))) * reg_param_sampling
+        h.gamma = gamma
+
+        delta = frac_delta / (L_likelihood)
+        lmbd = 3. * delta
 
         print('delta', delta)
         print('lmbd: ', lmbd)
         print('prox thresh: ', h.gamma*lmbd)
+        print('(1. - (delta / lmbd)) ', (1. - (delta/lmbd)))
 
 
-        fun_prior = lambda _x : h._fun_coeffs(h.dir_op(_x))
+        fun_prior = lambda _x : h._fun_coeffs(h.dir_op(torch.clone(_x)))
 
         sub_op = lambda _x1, _x2 : _x1 - _x2
-        prox_prior_cai = lambda _x, lmbd : h.adj_op(h._op_to_two_coeffs(
+        prox_prior_cai = lambda _x, lmbd : torch.clone(_x) + h.adj_op(h._op_to_two_coeffs(
             h.prox(h.dir_op(torch.clone(_x)), lmbd),
             h.dir_op(torch.clone(_x)), sub_op
         ))
@@ -231,8 +233,14 @@ for it_param, reg_param in enumerate(reg_params):
         # Define posterior and gradient
         logPi = lambda _z :  fun_likelihood(_z) + fun_prior(_z)
 
-        def MYULA_kernel_2(X, delta, lmbd, grad_likelihood, prox_prior):
+        def MYULA_kernel(X, delta, lmbd, grad_likelihood, prox_prior):
             return torch.real((1. - (delta/lmbd)) * torch.clone(X) - delta * grad_likelihood(torch.clone(X)) + (delta/lmbd) * prox_prior(X, lmbd)) + math.sqrt(2*delta) * torch.randn_like(X)
+
+
+        # Define prefix
+        save_prefix = 'MYULA_wavelets_frac_delta_{:.1e}_reg_param_{:.1e}_regParamSampling_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
+            frac_delta, reg_param, reg_param_sampling, n_samples, thinning, frac_burnin
+        )
 
 
         # Sampling alg params
@@ -254,7 +262,7 @@ for it_param, reg_param in enumerate(reg_params):
 
             # Update X
             # X = luq.sampling.ULA_kernel(X, delta, grad_likelihood_prior)
-            X = MYULA_kernel_2(X, delta, lmbd, grad_likelihood, prox_prior_cai)
+            X = MYULA_kernel(X, delta, lmbd, grad_likelihood, prox_prior_cai)
 
             if i_x == burnin:
                 # Initialise recording of sample summary statistics after burnin period
@@ -364,9 +372,6 @@ for it_param, reg_param in enumerate(reg_params):
             'elapsed_time': elapsed,
         }
 
-        save_path = '{:s}{:s}{:s}'.format(save_dir, save_prefix, '_vars.npy')
-        np.save(save_path, save_vars, allow_pickle=True)
-
 
         # %%
         # Plot
@@ -425,7 +430,7 @@ for it_param, reg_param in enumerate(reg_params):
             MC_X,
             current_var,
             "ULA",
-            nLags=50,
+            nLags=100,
             save_path=savefig_dir+save_prefix+'_autocorr_plot.pdf'
         )
 
@@ -443,6 +448,7 @@ for it_param, reg_param in enumerate(reg_params):
         plt.savefig(savefig_dir+save_prefix+'_NRMSE_SSIM_PSNR_evolution.pdf')
         plt.close()
 
-
-
+        # Save variables
+        save_path = '{:s}{:s}{:s}'.format(save_dir, save_prefix, '_vars.npy')
+        np.save(save_path, save_vars, allow_pickle=True)
 
