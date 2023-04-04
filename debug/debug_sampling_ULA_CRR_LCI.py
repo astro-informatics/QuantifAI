@@ -1,18 +1,24 @@
 # %%
 import os
 import numpy as np
-import torch
 from functools import partial
 import math
 from tqdm import tqdm
 import time as time
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+import torch
+M1 = False
 
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
-print(torch.cuda.current_device())
-print(torch.cuda.get_device_name(torch.cuda.current_device()))
+if M1:
+    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+else:
+    os.environ["CUDA_VISIBLE_DEVICES"]="1"
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if torch.cuda.is_available():
+        print(torch.cuda.is_available())
+        print(torch.cuda.device_count())
+        print(torch.cuda.current_device())
+        print(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
 from skimage.metrics import peak_signal_noise_ratio as psnr
@@ -35,10 +41,10 @@ from convex_reg import utils as utils_cvx_reg
 
 # %%
 # Optimisation options for the MAP estimation
-options = {"tol": 1e-5, "iter": 5000, "update_iter": 50, "record_iters": False}
+options = {"tol": 1e-5, "iter": 5000, "update_iter": 4999, "record_iters": False}
 # Save param
 save_dir = '/disk/xray0/tl3/repos/large-scale-UQ/debug/sampling-outputs/'
-
+savefig_dir = save_dir + 'new_figs/'
 # %%
 img_name = 'M31'
 
@@ -142,19 +148,19 @@ print(f"Lipschitz bound {L:.3f}")
 # %%
 
 # Iterate over
-my_lmbda = [2.5e3, 5e3, 1e4, 2e4, 5e4]
-my_frac_delta = [0.1, 0.2, 0.5]
+my_lmbda = [1e5] #, 5e4] # [2.5e3, 5e3, 1e4, 2e4, 5e4]
+my_frac_delta = [0.5] # [0.1, 0.2, 0.5]
 
 # Sampling alg params
 frac_burnin = 0.2
-n_samples = np.int64(1e3)
-thinning = np.int64(1e3)
+n_samples = np.int64(1e4)
+thinning = np.int64(2e2)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 
-for it in range(len(my_lmbda)):
+for it_1 in range(len(my_lmbda)):
 
     # Prior parameters
-    lmbd = my_lmbda[it]# 2.5e3
+    lmbd = my_lmbda[it_1]# 2.5e3
     mu = 20
 
     # Compute stepsize
@@ -166,7 +172,7 @@ for it in range(len(my_lmbda)):
     t = 1
 
 
-    for it in range(options['iter']):
+    for it_2 in range(options['iter']):
         x_hat_old = torch.clone(x_hat)
         # grad = g.grad(z.squeeze()) +  lmbd * model(mu * z)
         x_hat = z - alpha *(
@@ -186,13 +192,13 @@ for it in range(len(my_lmbda)):
         res = (torch.norm(x_hat_old - x_hat)/torch.norm(x_hat_old)).item()
 
         if res < options['tol']:
-            print("[GD] converged in %d iterations"%(it))
+            print("[GD] converged in %d iterations"%(it_2))
             break
 
-        if it % options['update_iter'] == 0:
+        if it_2 % options['update_iter'] == 0:
             print(
                 "[GD] %d out of %d iterations, tol = %f" %(            
-                    it,
+                    it_2,
                     options['iter'],
                     res,
                 )
@@ -227,12 +233,12 @@ for it in range(len(my_lmbda)):
         labels[i] += stats_str
         axs[i].set_title(labels[i], fontsize=16)
         axs[i].axis('off')
-    plt.savefig('{:s}{:s}_lmbd_{:.1e}_optim_MAP.pdf'.format(save_dir+'figs/', img_name, lmbd))
+    plt.savefig('{:s}{:s}_lmbd_{:.1e}_optim_MAP.pdf'.format(savefig_dir, img_name, lmbd))
     plt.close()
 
-    for it_2 in range(len(my_frac_delta)):
+    for it_3 in range(len(my_frac_delta)):
         #step size for ULA
-        frac_delta = my_frac_delta[it_2]
+        frac_delta = my_frac_delta[it_3]
 
         # Define prefix
         save_prefix = 'ULA_CRR_frac_delta_{:.1e}_lmbd_{:.1e}_mu_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
@@ -316,46 +322,37 @@ for it in range(len(my_lmbda)):
         # %%
         # Compute the UQ plots
         superpix_sizes = [32,16,8,4,1]
-        alpha_prob = 0.01
+        alpha_prob = 0.05
 
         cmap = 'cubehelix'
-        savefig_dir = save_dir + 'figs/'
 
         quantiles, st_dev_down, means_list = luq.map_uncertainty.compute_UQ(MC_X, superpix_sizes, alpha_prob)
 
-        for it, pix_size in enumerate(superpix_sizes):
+        for it_4, pix_size in enumerate(superpix_sizes):
 
+            # Plot UQ
             fig = plt.figure(figsize=(20,5))
 
-            plt.subplot(141)
+            plt.subplot(131)
             ax = plt.gca()
-            ax.set_title(f'Mean value, pix size={pix_size:d}')
-            im = ax.imshow(means_list[it], cmap=cmap)
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes('right', size='5%', pad=0.05)
-            fig.colorbar(im, cax=cax, orientation='vertical')
-            ax.set_yticks([]);ax.set_xticks([])
-            
-            plt.subplot(142)
-            ax = plt.gca()
-            ax.set_title(f'Low bound, pix size={pix_size:d}')
-            im = ax.imshow(quantiles[it][0,:,:], cmap=cmap)
+            ax.set_title(f'Mean value, <Mean val>={np.mean(means_list[it_4]):.2e} pix size={pix_size:d}')
+            im = ax.imshow(means_list[it_4], cmap=cmap)
             divider = make_axes_locatable(ax)
             cax = divider.append_axes('right', size='5%', pad=0.05)
             fig.colorbar(im, cax=cax, orientation='vertical')
             ax.set_yticks([]);ax.set_xticks([])
 
-            plt.subplot(143)
+            plt.subplot(132)
             ax = plt.gca()
-            ax.set_title(f'High bound, pix size={pix_size:d}')
-            im = ax.imshow(quantiles[it][1,:,:], cmap=cmap)
+            ax.set_title(f'St Dev, <St Dev>={np.mean(st_dev_down[it_4]):.2e} pix size={pix_size:d}')
+            im = ax.imshow(st_dev_down[it_4], cmap=cmap)
             divider = make_axes_locatable(ax)
             cax = divider.append_axes('right', size='5%', pad=0.05)
             fig.colorbar(im, cax=cax, orientation='vertical')
             ax.set_yticks([]);ax.set_xticks([])
 
-            plt.subplot(144)
-            LCI = quantiles[it][1,:,:] - quantiles[it][0,:,:]
+            plt.subplot(133)
+            LCI = quantiles[it_4][1,:,:] - quantiles[it_4][0,:,:]
             ax = plt.gca()
             ax.set_title(f'LCI, <LCI>={np.mean(LCI):.2e} pix size={pix_size:d}')
             im = ax.imshow(LCI, cmap=cmap)
@@ -363,9 +360,7 @@ for it in range(len(my_lmbda)):
             cax = divider.append_axes('right', size='5%', pad=0.05)
             fig.colorbar(im, cax=cax, orientation='vertical')
             ax.set_yticks([]);ax.set_xticks([])
-
             plt.savefig(savefig_dir+save_prefix+'_UQ_pixel_size_{:d}.pdf'.format(pix_size))
-            # plt.show()
             plt.close()
 
 
@@ -400,9 +395,6 @@ for it in range(len(my_lmbda)):
             'params': params,
             'elapsed_time': elapsed,
         }
-
-        save_path = '{:s}{:s}{:s}'.format(save_dir, save_prefix, '_vars.npy')
-        np.save(save_path, save_vars, allow_pickle=True)
 
 
         # %%
@@ -462,7 +454,7 @@ for it in range(len(my_lmbda)):
             MC_X,
             current_var,
             "ULA",
-            nLags=50,
+            nLags=100,
             save_path=savefig_dir+save_prefix+'_autocorr_plot.pdf'
         )
 
@@ -480,4 +472,6 @@ for it in range(len(my_lmbda)):
         plt.savefig(savefig_dir+save_prefix+'_NRMSE_SSIM_PSNR_evolution.pdf')
         plt.close()
 
-
+        # Save variables
+        save_path = '{:s}{:s}{:s}'.format(save_dir, save_prefix, '_vars.npy')
+        np.save(save_path, save_vars, allow_pickle=True)

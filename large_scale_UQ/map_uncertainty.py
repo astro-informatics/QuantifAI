@@ -2,22 +2,22 @@ import numpy as np
 import logging
 import skimage as ski
 
-logger = logging.getLogger("Optimus Primal")
+# logger = logging.getLogger("Optimus Primal")
 
 
-def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.01):
+def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.05):
     """Compute uncertainty quantification stats.
 
     Args:
 
         MC_X_array (np.ndarray): Array with generated samples. Shape=(n_samples, nx, ny)
         superpix_sizes (list[int]): Superpixel sizes.
-        alpha (float): Probability to compute the quantiles at `alpha` and `1-alpha`.
+        alpha (float): Probability to compute the quantiles at `alpha/2` and `1-alpha/2`.
 
     Returns:
 
         quantiles (list(np.ndarray)): List corresponding to the superpix sizes. 
-            For each element we have the two computed quantiles, `alpha` and `1-alpha`.
+            For each element we have the two computed quantiles, `alpha/2` and `1-alpha/2`.
         st_dev_down (list(np.ndarray)): List corresponding to the superpix sizes. 
             For each element we have the standard deviation of each superpixel along the samples.
         means_list (list(np.ndarray)): List corresponding to the superpix sizes. 
@@ -33,7 +33,7 @@ def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.01):
     means_list = []
     st_dev_down = []
 
-    p = np.array([alpha, 1-alpha])
+    p = np.array([alpha/2, 1-alpha/2])
 
     for k, block_size  in enumerate(superpix_sizes):
         
@@ -85,7 +85,7 @@ def bisection_method(function, start_interval, iters, tol):
     if np.allclose(eta1, eta2, 1e-12):
         return eta1
     if np.sign(function(eta1)) == np.sign(function(eta2)):
-        logger.info("[Bisection Method] There is no root in this range.")
+        print("[Bisection Method] There is no root in this range.")
         val = np.argmin(np.abs([eta1, eta2]))
         return [eta1, eta2][val]
     for i in range(int(iters)):
@@ -93,8 +93,8 @@ def bisection_method(function, start_interval, iters, tol):
         eta3 = (eta2 + eta1) * 0.5
         obj3 = function(eta3)
         if np.abs(eta1 - eta3) / np.abs(eta3) < tol:
-            if np.abs(obj3) < tol:
-                return eta3
+            # if np.abs(obj3) < tol:
+            return eta3
         if np.sign(obj1) == np.sign(obj3):
             eta1 = eta3
         else:
@@ -104,7 +104,7 @@ def bisection_method(function, start_interval, iters, tol):
 
 
 def create_local_credible_interval(
-    x_sol, region_size, function, bound, iters, tol, bottom, top
+    x_sol, region_size, function, bound, iters, tol, bottom, top, verbose=0.
 ):
     """Bisection method for finding credible intervals
 
@@ -125,7 +125,7 @@ def create_local_credible_interval(
     """
 
     region = np.zeros(x_sol.shape)
-    logger.info("Calculating credible interval for %s superpxiels.", region.shape)
+    print("Calculating credible interval for superpxiel: ", region.shape)
     if len(x_sol.shape) > 1:
         region[:region_size, :region_size] = 1.0
         dsizey, dsizex = int(x_sol.shape[0] / region_size), int(
@@ -158,14 +158,17 @@ def create_local_credible_interval(
                     ) 
 
                 error_m[i, j] = -bisection_method(obj, [0, -bottom], iters, tol) + x_sum
-                logger.info(
-                    "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s",
-                    i,
-                    j,
-                    error_m[i, j],
-                    error_p[i, j],
-                    x_sum,
-                )
+                
+                if verbose > 0.:
+                    print(
+                        "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s"%(
+                            i,
+                            j,
+                            error_m[i, j],
+                            error_p[i, j],
+                            x_sum,
+                        )
+                    )
     else:
         region[:region_size] = 1.0
         dsizey = int(x_sol.shape[0] / region_size)
@@ -186,13 +189,16 @@ def create_local_credible_interval(
                 return function(x_sol * (1.0 - mask) - eta * mask) - bound
 
             error_m[i] = -bisection_method(obj, [0, -bottom], iters, tol)
-            logger.info(
-                "[Credible Interval] %s has interval (%s, %s) with sum %s",
-                i,
-                error_m[i],
-                error_p[i],
-                x_sum,
-            )
+            
+            if verbose > 0.:
+                print(
+                    "[Credible Interval] %s has interval (%s, %s) with sum %s"%(
+                        i,
+                        error_m[i],
+                        error_p[i],
+                        x_sum,
+                    )
+                )
     return error_p, error_m, mean
 
 
@@ -220,7 +226,7 @@ def create_local_credible_interval_fast(
     """
 
     region = np.zeros(x_sol.shape)
-    logger.info("Calculating credible interval for %s superpxiels.", region.shape)
+    print("Calculating credible interval for superpxiels: ", region.shape)
     if len(x_sol.shape) > 1:
         dsizey, dsizex = int(x_sol.shape[0] / region_size), int(
             x_sol.shape[1] / region_size
@@ -259,7 +265,7 @@ def create_local_credible_interval_fast(
                     )
 
                 error_m[i, j] = -bisection_method(obj, [0, -bottom], iters, tol)
-                logger.info(
+                print(
                     "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s",
                     i,
                     j,
@@ -287,7 +293,7 @@ def create_local_credible_interval_fast(
                 return function(x_sol * (1.0 - mask) - eta * mask) - bound
 
             error_m[i] = -bisection_method(obj, [0, -bottom], iters, tol)
-            logger.info(
+            print(
                 "[Credible Interval] %s has interval (%s, %s) with sum %s",
                 i,
                 error_m[i],

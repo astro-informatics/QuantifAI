@@ -102,11 +102,7 @@ def FB_torch(
                 )
                 if viewer is not None:
                     viewer(x, it)
-        print(
-            "[Forward Backward] %d out of %d iterations, tol = %.2e"%(
-            it, max_iter, res,
-            )
-        )
+
 
     criter = criter[0 : it + 1]
     timing = np.cumsum(timing[0 : it + 1])

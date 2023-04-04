@@ -14,7 +14,12 @@ debug/matlab_output/M31_reg_strength_variations/saved_ana_mats/*.mat
 debug/matlab_output/M31_reg_strength_variations/saved_syn_mats/*.mat
 
 debug/sampling-outputs/figs/*.pdf
+debug/sampling-outputs/figs_wavelets/*.pdf
+debug/sampling-outputs/new_figs/*.pdf
 debug/sampling-outputs/frac*.npy
+debug/sampling-outputs/ULA_*.npy
+debug/sampling-outputs/MYULA_*.npy
+debug/sampling-outputs/SKROCK_*.npy
 debug/screenlog*
 
 # Distribution / packaging
