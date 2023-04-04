@@ -1,18 +1,24 @@
 # %%
 import os
 import numpy as np
-import torch
 from functools import partial
 import math
 from tqdm import tqdm
 import time as time
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+import torch
+M1 = False
 
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
-print(torch.cuda.current_device())
-print(torch.cuda.get_device_name(torch.cuda.current_device()))
+if M1:
+    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+else:
+    os.environ["CUDA_VISIBLE_DEVICES"]="1"
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if torch.cuda.is_available():
+        print(torch.cuda.is_available())
+        print(torch.cuda.device_count())
+        print(torch.cuda.current_device())
+        print(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
 from skimage.metrics import peak_signal_noise_ratio as psnr
@@ -35,10 +41,10 @@ from convex_reg import utils as utils_cvx_reg
 
 # %%
 # Optimisation options for the MAP estimation
-options = {"tol": 1e-5, "iter": 5000, "update_iter": 50, "record_iters": False}
+options = {"tol": 1e-5, "iter": 5000, "update_iter": 4999, "record_iters": False}
 # Save param
 save_dir = '/disk/xray0/tl3/repos/large-scale-UQ/debug/sampling-outputs/'
-
+savefig_dir = save_dir + 'new_figs/'
 # %%
 img_name = 'M31'
 
@@ -142,13 +148,13 @@ print(f"Lipschitz bound {L:.3f}")
 # %%
 
 # Iterate over
-my_lmbda = [5e4, 1e5] # [2.5e3, 5e3, 1e4, 2e4, 5e4]
+my_lmbda = [1e5] #, 5e4] # [2.5e3, 5e3, 1e4, 2e4, 5e4]
 my_frac_delta = [0.5] # [0.1, 0.2, 0.5]
 
 # Sampling alg params
 frac_burnin = 0.2
-n_samples = np.int64(4e3)
-thinning = np.int64(5e2)
+n_samples = np.int64(1e4)
+thinning = np.int64(2e2)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 
 for it_1 in range(len(my_lmbda)):
@@ -227,7 +233,7 @@ for it_1 in range(len(my_lmbda)):
         labels[i] += stats_str
         axs[i].set_title(labels[i], fontsize=16)
         axs[i].axis('off')
-    plt.savefig('{:s}{:s}_lmbd_{:.1e}_optim_MAP.pdf'.format(save_dir+'figs/', img_name, lmbd))
+    plt.savefig('{:s}{:s}_lmbd_{:.1e}_optim_MAP.pdf'.format(savefig_dir, img_name, lmbd))
     plt.close()
 
     for it_3 in range(len(my_frac_delta)):
@@ -319,7 +325,6 @@ for it_1 in range(len(my_lmbda)):
         alpha_prob = 0.05
 
         cmap = 'cubehelix'
-        savefig_dir = save_dir + 'figs/'
 
         quantiles, st_dev_down, means_list = luq.map_uncertainty.compute_UQ(MC_X, superpix_sizes, alpha_prob)
 
@@ -391,9 +396,6 @@ for it_1 in range(len(my_lmbda)):
             'elapsed_time': elapsed,
         }
 
-        save_path = '{:s}{:s}{:s}'.format(save_dir, save_prefix, '_vars.npy')
-        np.save(save_path, save_vars, allow_pickle=True)
-
 
         # %%
         # Plot
@@ -452,7 +454,7 @@ for it_1 in range(len(my_lmbda)):
             MC_X,
             current_var,
             "ULA",
-            nLags=50,
+            nLags=100,
             save_path=savefig_dir+save_prefix+'_autocorr_plot.pdf'
         )
 
@@ -470,4 +472,6 @@ for it_1 in range(len(my_lmbda)):
         plt.savefig(savefig_dir+save_prefix+'_NRMSE_SSIM_PSNR_evolution.pdf')
         plt.close()
 
-
+        # Save variables
+        save_path = '{:s}{:s}{:s}'.format(save_dir, save_prefix, '_vars.npy')
+        np.save(save_path, save_vars, allow_pickle=True)
