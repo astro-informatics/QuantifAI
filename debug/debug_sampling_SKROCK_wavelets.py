@@ -429,7 +429,7 @@ for it_param, reg_param in enumerate(reg_params):
             MC_X,
             current_var,
             "ULA",
-            nLags=50,
+            nLags=100,
             save_path=savefig_dir+save_prefix+'_autocorr_plot.pdf'
         )
 
