@@ -209,7 +209,7 @@ for it_param, reg_param in enumerate(reg_params):
         # L_g = 1 / lmbd
         # L = L_g + L_likelihood
         # delta = frac_delta / L
-        reg_param_sampling = 10.
+        reg_param_sampling = 50.
         gamma = h._get_max_abs_coeffs(h.dir_op(torch.clone(x_init))) * reg_param_sampling
         h.gamma = gamma
 
