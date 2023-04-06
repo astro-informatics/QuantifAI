@@ -18,3 +18,4 @@ from .measures import *
 from .tv_norm import *
 from .plots import *
 from .welford import *
+from .norml12 import *
