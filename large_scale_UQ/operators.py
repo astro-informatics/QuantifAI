@@ -1,5 +1,6 @@
 
 import numpy as np
+import math
 import torch
 from large_scale_UQ.utils import max_eigenval
 from large_scale_UQ.empty import Identity
@@ -414,37 +415,91 @@ class L2Norm_torch(torch.nn.Module):
         self.beta = max_val.item() / self.sigma ** 2
 
 
-    def grad(self, x):
-        """Computes the gradient of the l2_norm class
+    def grad(self, x, sigma=None, sigma2=None):
+        """Gradient of the l2_norm class with respect to the data
 
         Args:
 
-            x (np.ndarray): Data estimate
+            x (torch.Tensor): Data estimate
+            sigma (float): Noise standard deviation
+            sigma2 (float): Noise variance
 
         Returns:
 
             Gradient of the l2_norm expression
 
         """
+        if sigma is None:
+            if sigma2 is None:
+                sigma = self.sigma
+            else:
+                sigma = math.sqrt(sigma2)
+
         return - self.Phi.adj_op((self.data - self.Phi.dir_op(x))) / (
-            self.sigma ** 2
+            sigma ** 2
+        )
+    
+    def grad_sigma(self, x, sigma=None):
+        """Gradient of the l2_norm class with respect to sigma
+
+        Args:
+
+            x (torch.Tensor): Data estimate
+            sigma (torch.Tensor): Noise std dev value
+
+        Returns:
+
+            Gradient of the l2_norm expression
+
+        """
+        if sigma is None:
+            sigma = self.sigma
+        return - torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
+            sigma ** 3
         )
 
-    def fun(self, x):
+    def grad_sigma2(self, x, sigma2=None):
+        """Gradient of the l2_norm class with respect to sigma**2
+
+        Args:
+
+            x (torch.Tensor): Data estimate
+            sigma2 (torch.Tensor): Noise std dev value
+
+        Returns:
+
+            Gradient of the l2_norm expression
+
+        """
+        if sigma2 is None:
+            sigma2 = self.sigma**2
+        return - torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
+            2* sigma2**2
+        )
+
+    def fun(self, x, sigma=None, sigma2=None):
         """Evaluates the l2_norm class
 
         Args:
 
             x (torch.Tensor): Data estimate
+            sigma (float): Noise std dev value
+            sigma2 (float): Noise variance
 
         Returns:
 
             Computes the l2_norm loss
 
         """
+        if sigma is None:
+            if sigma2 is None:
+                sigma = self.sigma
+            else:
+                sigma = math.sqrt(sigma2)
+        
         return torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
-            2 * self.sigma ** 2
-        )        
+            2 * sigma ** 2
+        )
 
 
 class Wavelets_torch(torch.nn.Module):
