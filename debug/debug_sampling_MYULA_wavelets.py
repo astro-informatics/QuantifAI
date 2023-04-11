@@ -12,7 +12,7 @@ M1 = False
 if M1:
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 else:
-    os.environ["CUDA_VISIBLE_DEVICES"]="2"
+    os.environ["CUDA_VISIBLE_DEVICES"]="0"
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if torch.cuda.is_available():
         print(torch.cuda.is_available())
@@ -43,11 +43,12 @@ from convex_reg import utils as utils_cvx_reg
 
 # %%
 # Optimisation options for the MAP estimation
-options = {"tol": 1e-5, "iter": 5000, "update_iter": 4999, "record_iters": False}
+options = {"tol": 1e-5, "iter": 14000, "update_iter": 4999, "record_iters": False}
 # Save param
 repo_dir = '/disk/xray0/tl3/repos/large-scale-UQ'
-save_dir = repo_dir + '/debug/sampling-outputs/'
-savefig_dir = save_dir + 'figs_wavelets/'
+base_savedir = '/disk/xray0/tl3/outputs/large-scale-UQ/sampling/wavelets'
+save_dir = base_savedir + '/vars/'
+savefig_dir = base_savedir + '/figs/'
 
 # %%
 img_name = 'M31'
@@ -114,7 +115,8 @@ g = luq.operators.L2Norm_torch(
     data=torch_y,
     Phi=phi,
 )
-g.beta = 1.0 / sigma ** 2
+# Computed automatically in g
+# g.beta = 1.0 / sigma ** 2
 
 # Define real prox
 f = luq.operators.RealProx_torch()
@@ -122,17 +124,17 @@ f = luq.operators.RealProx_torch()
 # %%
 
 # Iterate over
-my_frac_delta = [0.5] # [0.1, 0.2, 0.5]
-reg_params = [5e-3] #, 2e-2]# [1e-3, 2e-3, 5e-3, 1e-2, 2e-2]
+my_frac_delta = [0.98] # [0.1, 0.2, 0.5]
+reg_params = [5., 50.] #, 2e-2]# [1e-3, 2e-3, 5e-3, 1e-2, 2e-2]
 
 # Wavelet parameters
 wavs_list = ['db8']
 levels = 4
 
 # Sampling alg params
-frac_burnin = 0.2
+frac_burnin = 0.1
 n_samples = np.int64(1e4)
-thinning = np.int64(5e1)
+thinning = np.int64(1e2)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 
 
@@ -141,17 +143,19 @@ for it_param, reg_param in enumerate(reg_params):
 
     # Define the wavelet dict
     # Define the l1 norm with dict psi
-    # gamma = torch.max(torch.abs(psi.dir_op(y_torch))) * reg_param
     psi = luq.operators.DictionaryWv_torch(wavs_list, levels)
 
     h = luq.operators.L1Norm_torch(1., psi, op_to_coeffs=True)
-    gamma = h._get_max_abs_coeffs(h.dir_op(torch.clone(x_init))) * reg_param
-    h.gamma = gamma
-    h.beta = 1.0
-
+    # gamma = h._get_max_abs_coeffs(h.dir_op(torch.clone(x_init))) * reg_param
+    # h.gamma = gamma
+    h.gamma = reg_param
 
     # Compute stepsize
-    alpha = 1. / (1. + g.beta)
+    alpha = 0.98 / g.beta
+
+    # Effective threshold
+    print('Threshold: ', h.gamma * alpha)
+
     # Run the optimisation
     x_hat, diagnostics = luq.optim.FB_torch(
         x_init,
@@ -160,7 +164,7 @@ for it_param, reg_param in enumerate(reg_params):
         f=f,
         h=h,
         alpha=alpha,
-        tau=1.,
+        tau=alpha,
         viewer=None
     )
 
@@ -194,27 +198,33 @@ for it_param, reg_param in enumerate(reg_params):
     plt.close()
 
     for it_2 in range(len(my_frac_delta)):
-        #step size for ULA
-        frac_delta = my_frac_delta[it_2]
-
-        #function handles to used for ULA
-        # Define likelihood functions
-        fun_likelihood = lambda _x : g.fun(_x)
-        grad_likelihood = lambda _x : g.grad(_x)
 
         # Define sampling parameters
         L_likelihood = g.beta
+        # Define MY lambda parameter
+        lmbd = 1 / L_likelihood
+        # Compute MY envelope Lipschitz param
+        L_g = 1 / lmbd
+        # Total Lipschitz
+        L = L_g + L_likelihood
+        # Define sampling's step size
+        frac_delta = 0.98
+        delta = frac_delta / L
+
+        # Change model's parameter [optional]
+        reg_param_sampling = reg_param
+        h.gamma = reg_param_sampling
+
         # lmbd = 0.99 / L_likelihood
         # # Compute total Lipschitz constant and ste-size
         # L_g = 1 / lmbd
         # L = L_g + L_likelihood
         # delta = frac_delta / L
-        reg_param_sampling = 50.
-        gamma = h._get_max_abs_coeffs(h.dir_op(torch.clone(x_init))) * reg_param_sampling
-        h.gamma = gamma
-
-        delta = frac_delta / (L_likelihood)
-        lmbd = 3. * delta
+        # reg_param_sampling = 50.
+        # gamma = h._get_max_abs_coeffs(h.dir_op(torch.clone(x_init))) * reg_param_sampling
+        # h.gamma = gamma
+        # delta = frac_delta / (L_likelihood)
+        # lmbd = 3. * delta
 
         print('delta', delta)
         print('lmbd: ', lmbd)
@@ -222,24 +232,26 @@ for it_param, reg_param in enumerate(reg_params):
         print('(1. - (delta / lmbd)) ', (1. - (delta/lmbd)))
 
 
-        fun_prior = lambda _x : h._fun_coeffs(h.dir_op(torch.clone(_x)))
-
+        # Function handles to used for ULA
+        # Define likelihood functions
+        fun_likelihood = lambda _x : g.fun(_x)
+        grad_likelihood = lambda _x : g.grad(_x)
+        # Define prior potential
+        fun_prior = lambda _x : h._fun_coeffs(h.dir_op(_x))
+        # Define prior evaluation
         sub_op = lambda _x1, _x2 : _x1 - _x2
         prox_prior_cai = lambda _x, lmbd : torch.clone(_x) + h.adj_op(h._op_to_two_coeffs(
-            h.prox(h.dir_op(torch.clone(_x)), lmbd),
-            h.dir_op(torch.clone(_x)), sub_op
+            h.prox(h.dir_op(_x), lmbd),
+            h.dir_op(_x), sub_op
         ))
-
-        # Define posterior and gradient
+        # Define posterior potential
         logPi = lambda _z :  fun_likelihood(_z) + fun_prior(_z)
-
-        def MYULA_kernel(X, delta, lmbd, grad_likelihood, prox_prior):
-            return torch.real((1. - (delta/lmbd)) * torch.clone(X) - delta * grad_likelihood(torch.clone(X)) + (delta/lmbd) * prox_prior(X, lmbd)) + math.sqrt(2*delta) * torch.randn_like(X)
-
+        # Define reality prox
+        real_prox = lambda _z : torch.real(_z)
 
         # Define prefix
-        save_prefix = 'MYULA_wavelets_frac_delta_{:.1e}_reg_param_{:.1e}_regParamSampling_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
-            frac_delta, reg_param, reg_param_sampling, n_samples, thinning, frac_burnin
+        save_prefix = 'MYULA_wavelets_frac_delta_{:.1e}_reg_param_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
+            frac_delta, reg_param, n_samples, thinning, frac_burnin
         )
 
 
@@ -261,8 +273,9 @@ for it_param, reg_param in enumerate(reg_params):
         for i_x in tqdm(range(maxit)):
 
             # Update X
-            # X = luq.sampling.ULA_kernel(X, delta, grad_likelihood_prior)
-            X = MYULA_kernel(X, delta, lmbd, grad_likelihood, prox_prior_cai)
+            X = luq.sampling.MYULA_kernel(
+                X, delta, lmbd, grad_likelihood, prox_prior_cai, real_prox
+            )
 
             if i_x == burnin:
                 # Initialise recording of sample summary statistics after burnin period
@@ -301,7 +314,9 @@ for it_param, reg_param in enumerate(reg_params):
 
         cmap = 'cubehelix'
 
-        quantiles, st_dev_down, means_list = luq.map_uncertainty.compute_UQ(MC_X, superpix_sizes, alpha_prob)
+        quantiles, st_dev_down, means_list = luq.map_uncertainty.compute_UQ(
+            MC_X, superpix_sizes, alpha_prob
+        )
 
         for it_3, pix_size in enumerate(superpix_sizes):
 
@@ -348,7 +363,7 @@ for it_param, reg_param in enumerate(reg_params):
             'n_samples': n_samples,
             'thinning': thinning,
             'frac_burnin': frac_burnin,
-            'gamma': gamma,
+            # 'gamma': gamma,
             'frac_delta': frac_delta,
             'reg_param': reg_param,
             # 'lambd_frac': lambd_frac,
@@ -426,14 +441,15 @@ for it_param, reg_param in enumerate(reg_params):
         # plt.show()
         plt.close()
 
-        luq.utils.autocor_plots(
-            MC_X,
-            current_var,
-            "ULA",
-            nLags=100,
-            save_path=savefig_dir+save_prefix+'_autocorr_plot.pdf'
-        )
-
+        nLags = 100
+        if nLags < n_samples:
+            luq.utils.autocor_plots(
+                MC_X,
+                current_var,
+                "ULA",
+                nLags=nLags,
+                save_path=savefig_dir+save_prefix+'_autocorr_plot.pdf'
+            )
 
         fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(18, 6))
         ax[0].set_title("NRMSE")
