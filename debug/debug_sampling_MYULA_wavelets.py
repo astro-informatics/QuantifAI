@@ -464,7 +464,12 @@ for it_param, reg_param in enumerate(reg_params):
         plt.savefig(savefig_dir+save_prefix+'_NRMSE_SSIM_PSNR_evolution.pdf')
         plt.close()
 
-        # Save variables
-        save_path = '{:s}{:s}{:s}'.format(save_dir, save_prefix, '_vars.npy')
-        np.save(save_path, save_vars, allow_pickle=True)
+
+        try:
+            save_path = '{:s}{:s}{:s}'.format(
+                save_dir, save_prefix, '_vars.npy'
+            )
+            np.save(save_path, save_vars, allow_pickle=True)
+        except Exception as e:
+            print('Could not save vairables. Exception caught: ', e)
 

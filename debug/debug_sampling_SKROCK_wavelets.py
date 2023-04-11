@@ -134,7 +134,7 @@ frac_burnin = 0.1
 n_samples = np.int64(1e4)
 thinning = np.int64(1e1)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
-
+# SKROCK params
 nStages = 10
 eta = 0.05
 dt_perc = 0.99
@@ -399,8 +399,6 @@ for it_param, reg_param in enumerate(reg_params):
             'elapsed_time': elapsed,
         }
 
-        save_path = '{:s}{:s}{:s}'.format(save_dir, save_prefix, '_vars.npy')
-        np.save(save_path, save_vars, allow_pickle=True)
 
 
         # %%
@@ -478,5 +476,13 @@ for it_param, reg_param in enumerate(reg_params):
 
         plt.savefig(savefig_dir+save_prefix+'_NRMSE_SSIM_PSNR_evolution.pdf')
         plt.close()
+
+        try:
+            save_path = '{:s}{:s}{:s}'.format(
+                save_dir, save_prefix, '_vars.npy'
+            )
+            np.save(save_path, save_vars, allow_pickle=True)
+        except Exception as e:
+            print('Could not save vairables. Exception caught: ', e)
 
 
