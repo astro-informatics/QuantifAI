@@ -5,7 +5,9 @@ import numpy as np
 from typing import Callable
 
 def ULA_kernel(
-    X: torch.Tensor, delta: float, grad_likelihood_prior: Callable
+    X: torch.Tensor,
+    delta: float,
+    grad_likelihood_prior: Callable
 ) -> torch.Tensor:
     """ULA sampling algorithm kernel
 
@@ -21,9 +23,41 @@ def ULA_kernel(
     return X - delta * grad_likelihood_prior(X) + math.sqrt(2*delta) * torch.randn_like(X)
 
 
+def MYULA_kernel(
+    X: torch.Tensor,
+    delta: float,
+    lmbd: float,
+    grad_likelihood: Callable,
+    prox_prior: Callable,
+    op_drift= lambda _x : torch.real(_x)
+) -> torch.Tensor:
+    """ULA sampling algorithm kernel
+
+    Args:
+
+        X (torch.Tensor): Tensor to update
+        delta (float): Step size for the MYULA algorithm
+        lmbd (float): Moreau-Yosida envelope parameter
+        grad_likelihood (function): gradient of the likelihood
+        prox_prior (function): prox of the non-smooth prior
+        op_drift (function): operator to apply to the drift term.
+            Defaults to the real projection.
+
+    Returns:
+        torch.Tensor: New generated sample
+    """
+    return (1. - (delta/lmbd)) * torch.clone(X) + op_drift(
+        - delta * grad_likelihood(torch.clone(X)) + (delta/lmbd) * prox_prior(X, lmbd)
+    ) + math.sqrt(2*delta) * torch.randn_like(X)
+
+
 def SKROCK_kernel(
-    X: torch.Tensor, Lipschitz_U: float, nStages: int, eta: float,
-    dt_perc: float, grad_likelihood_prior: Callable
+    X: torch.Tensor,
+    Lipschitz_U: float,
+    nStages: int,
+    eta: float,
+    dt_perc: float,
+    grad_likelihood_prior: Callable
 ) -> torch.Tensor:
     """SKROCK sampling algorithm kernel
 
