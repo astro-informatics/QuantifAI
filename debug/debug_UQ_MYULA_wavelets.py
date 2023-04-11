@@ -337,8 +337,8 @@ for it_param, reg_param in enumerate(reg_params):
     # We will overwrite the dict with new results
     try:
         saving_map_path = save_dir + save_MAP_prefix + '_MAP_vars.npy'
-        # if os.path.isfile(saving_map_path):
-        #     os.remove(saving_map_path)
+        if os.path.isfile(saving_map_path):
+            os.remove(saving_map_path)
         np.save(saving_map_path, save_map_vars, allow_pickle=True)
     except Exception as e:
         print('Could not save vairables. Exception caught: ', e)    
