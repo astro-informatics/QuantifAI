@@ -279,7 +279,7 @@ for it_param, reg_param in enumerate(reg_params):
         plt.imshow(x - np_x_hat, cmap=cmap);plt.colorbar()
         plt.title('Ground truth - MAP estimator')
         plt.subplot(245)
-        plt.imshow(error_length, cmap=cmap, vmin=0, vmax=0.3);plt.colorbar()
+        plt.imshow(error_length, cmap=cmap);plt.colorbar()
         plt.title('LCI (max={:.5f})\n (mean={:.5f})'.format(
             np.max(error_length), np.mean(error_length))
         )
