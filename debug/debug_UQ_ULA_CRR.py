@@ -12,7 +12,7 @@ M1 = False
 if M1:
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 else:
-    os.environ["CUDA_VISIBLE_DEVICES"]="2"
+    os.environ["CUDA_VISIBLE_DEVICES"]="1"
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if torch.cuda.is_available():
         print(torch.cuda.is_available())
@@ -152,7 +152,7 @@ print(f"Lipschitz bound {L_CRR:.3f}")
 # %%
 
 # CRR parameters
-reg_params = [250., 1e3, 5e3, 1e4]
+reg_params = [5e4, 1e5] # [250., 1e3, 5e3, 1e4]
 mu = 20
 # my_lmbda = [1e5] #, 5e4] # [2.5e3, 5e3, 1e4, 2e4, 5e4]
 
