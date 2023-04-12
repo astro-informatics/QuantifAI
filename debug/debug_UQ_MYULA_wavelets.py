@@ -456,7 +456,6 @@ for it_param, reg_param in enumerate(reg_params):
 
     for it_3, pix_size in enumerate(superpix_sizes):
 
-
         # Plot UQ
         fig = plt.figure(figsize=(20,5))
 
@@ -500,6 +499,7 @@ for it_param, reg_param in enumerate(reg_params):
         'thinning': thinning,
         'frac_burnin': frac_burnin,
         # 'gamma': gamma,
+        'delta': delta,
         'frac_delta': frac_delta,
         'reg_param': reg_param,
         # 'lambd_frac': lambd_frac,
@@ -600,7 +600,7 @@ for it_param, reg_param in enumerate(reg_params):
     plt.savefig(savefig_dir+save_prefix+'_NRMSE_SSIM_PSNR_evolution.pdf')
     plt.close()
 
-
+    # Save variables
     try:
         save_path = '{:s}{:s}{:s}'.format(
             save_dir, save_prefix, '_vars.npy'
