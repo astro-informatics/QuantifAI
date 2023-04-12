@@ -152,7 +152,7 @@ print(f"Lipschitz bound {L_CRR:.3f}")
 # %%
 
 # CRR parameters
-reg_params = [250., 1e3, 5e3, 1e4, 5e4, 1e5]
+reg_params = [5e4] # [250., 1e3, 5e3, 1e4, 5e4, 1e5]
 mu = 20
 # my_lmbda = [1e5] #, 5e4] # [2.5e3, 5e3, 1e4, 2e4, 5e4]
 
@@ -169,7 +169,7 @@ superpix_sizes = [32,16,8,4,1]
 # Sampling alg params
 frac_delta = 0.98
 frac_burnin = 0.1
-n_samples = np.int64(1e4)
+n_samples = np.int64(5e4)
 thinning = np.int64(1e1)
 maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
 # SKROCK params
@@ -347,7 +347,7 @@ for it_1 in range(len(reg_params)):
             np.max(error_length), np.mean(error_length))
         )
         plt.subplot(246)
-        plt.imshow(error_length - np.mean(error_length), cmap=cmap);plt.colorbar()
+        plt.imshow(error_length - np.mean(error_length), cmap='viridis');plt.colorbar()
         plt.title('LCI - <LCI>')
         plt.subplot(247)
         plt.imshow(mean, cmap=cmap);plt.colorbar();plt.title('Mean')

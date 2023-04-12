@@ -284,7 +284,7 @@ for it_param, reg_param in enumerate(reg_params):
             np.max(error_length), np.mean(error_length))
         )
         plt.subplot(246)
-        plt.imshow(error_length - np.mean(error_length), cmap=cmap);plt.colorbar()
+        plt.imshow(error_length - np.mean(error_length), cmap='viridis');plt.colorbar()
         plt.title('LCI - <LCI>')
         plt.subplot(247)
         plt.imshow(mean, cmap=cmap);plt.colorbar();plt.title('Mean')
