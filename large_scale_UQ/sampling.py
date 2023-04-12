@@ -20,7 +20,7 @@ def ULA_kernel(
     Returns:
         torch.Tensor: New generated sample
     """
-    return X - delta * grad_likelihood_prior(X) + math.sqrt(2*delta) * torch.randn_like(X)
+    return torch.clone(X) - delta * grad_likelihood_prior(X) + math.sqrt(2*delta) * torch.randn_like(X)
 
 
 def MYULA_kernel(
