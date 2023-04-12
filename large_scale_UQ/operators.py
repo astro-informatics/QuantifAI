@@ -872,7 +872,7 @@ class RealProx_torch(torch.nn.Module):
         super().__init__()
         self.beta = 1.0
 
-    def prox(self, x, tau):
+    def prox(self, x, tau=1.):
         """Evaluates the real half-plane projection of x
 
         Args:
