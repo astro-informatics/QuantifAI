@@ -22,7 +22,7 @@ def eval_snr(x, x_est):
         return 0
     num = np.sqrt(np.sum(np.abs(x) ** 2))
     den = np.sqrt(np.sum(np.abs(x - x_est) ** 2))
-    return round(20*np.log10(num/den), 2)
+    return round(20 * np.log10(num / den), 2)
 
 
 def blur_operators(kernel_len, size, type_blur, device):
@@ -51,29 +51,51 @@ def blur_operators(kernel_len, size, type_blur, device):
 
     return A, AT, AAT_norm
 
-def max_eigenval(A, At, im_size, tol, max_iter, verbose, device):
+def max_eigenval(
+    A,
+    At,
+    im_shape,
+    tol=1e-4,
+    max_iter=np.int64(1e4),
+    verbose=0,
+    device=torch.device('cpu')
+):
+    """Computes the maximum eigen value of the compund operator AtA.
 
+    Follows X. Cai article's areas.
+
+    Args:
+        A (Callable): Radio image name
+        At (Callable): if the area contains phyisical information
+        im_shape (list, tuple or np.ndarray): Image shape where `len(im_shape)=2`
+        tol (float): Algorithm's tolerance
+        max_iter (int): Max number of iterations
+        verbose (float): If verbose>0, verbose mode is activated
+        device (torch.device): Torch's device
+
+    Returns:
+        val (float): max eigenvalue of the AtA operator
+    """
     with torch.no_grad():
-
-    #computes the maximum eigen value of the compund operator AtA
-        
-        x = torch.normal(mean=0, std=1,size=(im_size,im_size))[None][None].to(device)
-        x = x/torch.norm(torch.ravel(x),2)
+        x = torch.normal(
+            mean=0, std=1, size=im_shape
+        )[None][None].to(device)
+        x = x / torch.norm(torch.ravel(x), 2)
         init_val = 1
         
-        for k in range(0,max_iter):
+        for k in range(max_iter):
             y = A(x)
             x = At(y)
-            val = torch.norm(torch.ravel(x),2)
-            rel_var = torch.abs(val-init_val)/init_val
+            val = torch.norm(torch.ravel(x), 2)
+            rel_var = torch.abs(val - init_val) / init_val
             if (verbose > 1):
-                print('Iter = {}, norm = {}',k,val)
+                print('Iter = {}, norm = {}', k, val)
             
             if (rel_var < tol):
                 break
             
             init_val = val
-            x = x/val
+            x = x / val
         
         if (verbose > 0):
             print('Norm = {}', val)
