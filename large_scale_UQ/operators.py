@@ -267,7 +267,7 @@ class MaskedFourier_torch(torch.nn.Module):
 
     def __init__(
             self,
-            dim,
+            shape,
             ratio=0.5,
             mask=None,
             norm=None,
@@ -276,24 +276,28 @@ class MaskedFourier_torch(torch.nn.Module):
         """Initialises the masked fourier sensing operator.
 
         Args:
-            dim (int): Dimension of square pixel-space image.
+            shape (list, tuple or int): Dimensions of pixel-space image.
             ratio (float): Fraction of measurements observed.
             norm (str): FFT normalization mode. Options are `forward`, `backward` or `norm`.
             device (str): device for the `pytorch` framework.
         """
         super().__init__()
         self.norm = norm
-        self.dim = dim
         self.ratio = ratio
         self.device = device
-        self.shape = (dim, dim)
+        if type(shape) is int:
+            self.shape = (shape, shape)
+        elif len(shape) == 2:
+            self.shape = shape
+        else:
+            raise ValueError('Shape should be an int or array (or tuple) of length 2.')
         self.mask = mask
         # If the mask is not defined, initialise a random one
         if mask is None:
             self.init_mask()
         else:
             # Check the channel dimensions for the pytorch framework
-            if self.mask.shape != (1, 1, dim, dim):
+            if self.mask.shape != (1, 1, self.shape[0], self.shape[1]):
                 self.mask.reshape((1,1) + self.shape)
             # Set init mask
             self.set_mask(self.mask)
@@ -307,8 +311,8 @@ class MaskedFourier_torch(torch.nn.Module):
 
     def init_mask(self):
         """Initialise random mask."""
-        mask = np.full(self.dim**2, False)
-        mask[: int(self.ratio * self.dim**2)] = True
+        mask = np.full(self.shape[0] * self.shape[1], False)
+        mask[: int(self.ratio * self.shape[0] * self.shape[1])] = True
         np.random.shuffle(mask)
         self.mask = torch.tensor(
             np.copy(mask.reshape(self.shape)), device=self.device
@@ -402,10 +406,11 @@ class L2Norm_torch(torch.nn.Module):
         """Compute Lipschitz constant."""
         A = lambda _x : self.Phi.dir_op(_x)
         At = lambda _x : self.Phi.adj_op(_x)
+
         max_val = max_eigenval(
             A=A,
             At=At,
-            im_size=self.data.shape[2],
+            im_shape=torch.squeeze(self.data).shape,
             tol=1e-4,
             max_iter=int(1e4),
             verbose=0,
