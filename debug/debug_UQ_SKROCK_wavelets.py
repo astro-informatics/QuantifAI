@@ -124,7 +124,7 @@ f = luq.operators.RealProx_torch()
 
 # Iterate over
 my_frac_delta = [0.98]
-reg_params = [1e2] # [5., 10., 20., 40.]
+reg_params = [5e2, 5e1, 1e3, 5e3, 1e4, 5e4] # [5., 10., 20., 40.]
 
 # Wavelet parameters
 wavs_list = ['db8']
