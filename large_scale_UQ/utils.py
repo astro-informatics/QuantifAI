@@ -47,7 +47,7 @@ def blur_operators(kernel_len, size, type_blur, device):
     # A backward operator
     AT = lambda x: torch.fft.ifft2(torch.multiply(HC_FFT,torch.fft.fft2(x[0,0]))).real.reshape(x.shape)
 
-    AAT_norm = max_eigenval(A, AT, nx, 1e-4, int(1e4), 0, device=device)
+    AAT_norm = max_eigenval(A, AT, size, 1e-4, int(1e4), 0, device=device)
 
     return A, AT, AAT_norm
 
