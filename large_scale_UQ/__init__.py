@@ -6,3 +6,4 @@ from . import optim
 from . import empty
 from . import functions
 from . import sampling
+from . import helpers
