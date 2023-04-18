@@ -19,7 +19,6 @@ def load_imgs(img_name, repo_dir):
         img (np.ndarray): preprocessed radio image
         mat_mask (np.ndarray): Fourier mask
     """
-
     # Load img
     img_path = repo_dir + '/data/imgs/{:s}.fits'.format(img_name)
     img_data = fits.open(img_path, memmap=False)
@@ -49,3 +48,47 @@ def load_imgs(img_name, repo_dir):
     mat_mask = np.reshape(np.sum(op_mask, axis=0), img.shape, order='F').astype(bool)
 
     return img, mat_mask
+
+def get_hypothesis_test_mask(img_name, physical=True):
+    """Load hypothesis test masks.
+
+    Follows X. Cai article's areas.
+
+    Args:
+        img_name (str): Radio image name
+        physical (bool): if the area contains phyisical information
+
+    Returns:
+        mask_x (list): mask's x coordinates
+        mask_y (list): mask's y coordinates
+    """
+    if img_name == 'M31':
+        if physical:
+            mask_x = [144, 179]
+            mask_y = [29, 64]
+        else:
+            raise NotImplementedError
+
+    elif img_name == 'CYN':
+        if physical:
+            mask_x = [124, 157]
+            mask_y = [219, 256]
+        else:
+            raise NotImplementedError
+
+    elif img_name == 'W28':
+        if physical:
+            mask_x = [87, 119]
+            mask_y = [9, 39]
+        else:
+            raise NotImplementedError
+
+    elif img_name == '3c288':
+        if physical:
+            mask_x = [118, 140]
+            mask_y = [87, 119]
+        else:
+            mask_x = [14, 34]
+            mask_y = [156, 180]           
+
+    return mask_x, mask_y
