@@ -83,9 +83,8 @@ myComplexType = torch.complex64
 torch_img = torch.tensor(np.copy(img), dtype=myType, device=device).reshape((1,1) + img.shape)
 
 
-dim = 256
 phi = luq.operators.MaskedFourier_torch(
-    dim=dim, 
+    shape=img.shape, 
     ratio=0.5 ,
     mask=mat_mask,
     norm='ortho',
@@ -152,7 +151,7 @@ print(f"Lipschitz bound {L_CRR:.3f}")
 # %%
 
 # CRR parameters
-reg_params = [5e5, 1e6] # [250., 1e3, 5e3, 1e4, 5e4, 1e5]
+reg_params = [2.5e2]# , 1e6] # [250., 1e3, 5e3, 1e4, 5e4, 1e5]
 mu = 20
 # my_lmbda = [1e5] #, 5e4] # [2.5e3, 5e3, 1e4, 2e4, 5e4]
 

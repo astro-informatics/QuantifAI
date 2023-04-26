@@ -84,7 +84,7 @@ torch_img = torch.tensor(np.copy(img), dtype=myType, device=device).reshape((1,1
 # %%
 dim = 256
 phi = luq.operators.MaskedFourier_torch(
-    dim=dim, 
+    shape=img.shape, 
     ratio=0.5 ,
     mask=mat_mask,
     norm='ortho',
