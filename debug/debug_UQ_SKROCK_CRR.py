@@ -539,7 +539,6 @@ for it_1 in range(len(reg_params)):
         'X_MMSE': np.mean(MC_X, axis=0),
         'post_meanvar': post_meanvar,
         'absfouriercoeff': absfouriercoeff,
-        'MC_X': MC_X,
         'logpi_thinning_trace': logpi_thinning_trace,
         'X': to_numpy(X),
         'quantiles': quantiles,
@@ -633,6 +632,11 @@ for it_1 in range(len(reg_params)):
             save_dir, save_prefix, '_vars.npy'
         )
         np.save(save_path, save_vars, allow_pickle=True)
+
+        save_samples_path = '{:s}{:s}{:s}'.format(
+            save_dir, save_prefix, '_samples.npy'
+        )
+        np.save(save_samples_path, MC_X, allow_pickle=True)
     except Exception as e:
         print('Could not save vairables. Exception caught: ', e)
 
