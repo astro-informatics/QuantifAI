@@ -51,9 +51,52 @@ savefig_dir = base_savedir + '/figs/'
 
 img_name = 'M31'
 
-# Load img
-img_path = '/disk/xray0/tl3/repos/large-scale-UQ/data/imgs/{:s}.fits'.format(img_name)
-img_data = fits.open(img_path, memmap=False)
+
+# CRR load parameters
+sigma_training = 5
+t_model = 5
+CRR_dir_name = '/disk/xray0/tl3/repos/convex_ridge_regularizers/trained_models/'
+# CRR parameters
+reg_params = [5e4]
+mu = 20
+
+
+# LCI params
+alpha_prob = 0.05
+
+# LCI algorithm parameters (bisection)
+LCI_iters = 200
+LCI_tol = 1e-4
+LCI_bottom = -10
+LCI_top = 10
+
+# Compute the MAP-based UQ plots
+superpix_MAP_sizes = [32, 16, 8, 4]
+# Clipping values for MAP-based LCI. Set as None for no clipping
+clip_high_val = 1.
+clip_low_val = 0.
+
+# Compute the sampling UQ plots
+superpix_sizes = [32,16,8,4,1]
+
+# Sampling alg params
+frac_delta = 0.98
+frac_burnin = 0.1
+n_samples = np.int64(5e4)
+thinning = np.int64(1e1)
+maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
+# SKROCK params
+nStages = 10
+eta = 0.05
+dt_perc = 0.99
+
+# Plot parameters
+cmap = 'cubehelix'
+nLags = 100
+
+
+
+# %%
 
 # Load img
 img_path = repo_dir + '/data/imgs/{:s}.fits'.format(img_name)
@@ -81,7 +124,9 @@ mat_mask = np.reshape(np.sum(op_mask, axis=0), (256,256), order='F').astype(bool
 myType = torch.float32
 myComplexType = torch.complex64
 
-torch_img = torch.tensor(np.copy(img), dtype=myType, device=device).reshape((1,1) + img.shape)
+torch_img = torch.tensor(
+    np.copy(img), dtype=myType, device=device).reshape((1,1) + img.shape
+)
 
 
 phi = luq.operators.MaskedFourier_torch(
@@ -127,11 +172,8 @@ f = luq.operators.RealProx_torch()
 torch.set_grad_enabled(False)
 torch.set_num_threads(4)
 
-sigma_training = 5
-t_model = 5
-dir_name = '/disk/xray0/tl3/repos/convex_ridge_regularizers/trained_models/'
 exp_name = f'Sigma_{sigma_training}_t_{t_model}/'
-model = utils_cvx_reg.load_model(dir_name+exp_name, 'cuda:0', device_type='gpu')
+model = utils_cvx_reg.load_model(CRR_dir_name + exp_name, 'cuda:0', device_type='gpu')
 
 print(f'Numbers of parameters before prunning: {model.num_params}')
 model.prune()
@@ -151,34 +193,6 @@ print(f"Lipschitz bound {L_CRR:.3f}")
 
 # %%
 
-# CRR parameters
-reg_params = [2.5e2]# , 1e6] # [250., 1e3, 5e3, 1e4, 5e4, 1e5]
-mu = 20
-# my_lmbda = [1e5] #, 5e4] # [2.5e3, 5e3, 1e4, 2e4, 5e4]
-
-
-# LCI params
-alpha_prob = 0.05
-
-# Compute the MAP-based UQ plots
-superpix_MAP_sizes = [32, 16, 8, 4]
-
-# Compute the sampling UQ plots
-superpix_sizes = [32,16,8,4,1]
-# Clipping values. Set as None for no clipping
-clip_high_val = 1.
-clip_low_val = 0.
-
-# Sampling alg params
-frac_delta = 0.98
-frac_burnin = 0.1
-n_samples = np.int64(5e4)
-thinning = np.int64(1e1)
-maxit = np.int64(n_samples * thinning * (1. + frac_burnin))
-# SKROCK params
-nStages = 10
-eta = 0.05
-dt_perc = 0.99
 
 
 for it_1 in range(len(reg_params)):
@@ -238,7 +252,7 @@ for it_1 in range(len(reg_params)):
     labels = ["Truth", "Dirty", "Reconstruction", "Residual (x - x^hat)"]
     fig, axs = plt.subplots(1,4, figsize=(20,8), dpi=200)
     for i in range(4):
-        im = axs[i].imshow(images[i], cmap='cubehelix', vmax=np.nanmax(images[i]), vmin=np.nanmin(images[i]))
+        im = axs[i].imshow(images[i], cmap=cmap, vmax=np.nanmax(images[i]), vmin=np.nanmin(images[i]))
         divider = make_axes_locatable(axs[i])
         cax = divider.append_axes('right', size='5%', pad=0.05)
         fig.colorbar(im, cax=cax, orientation='vertical')
@@ -282,12 +296,6 @@ for it_1 in range(len(reg_params)):
     N = np_x_hat.size
     tau_alpha = np.sqrt(16*np.log(3/alpha_prob))
     gamma_alpha = fun(x_hat).item() + tau_alpha*np.sqrt(N) + N
-
-    # Compute the LCI
-    LCI_iters = 200
-    LCI_tol = 1e-4
-    LCI_bottom = -10
-    LCI_top = 10
 
     error_p_arr = []
     error_m_arr = []
@@ -345,36 +353,57 @@ for it_1 in range(len(reg_params)):
         vmin = np.min((gt_mean, mean, error_length))
         vmax = np.max((gt_mean, mean, error_length))
         # err_vmax= 0.6
-        cmap='cubehelix'
 
-        plt.figure(figsize=(24,5))
+        # Plot UQ
+        fig = plt.figure(figsize=(24,5))
+
         plt.subplot(141)
-        plt.imshow(mean, cmap=cmap, vmin=vmin, vmax=vmax)
-        plt.colorbar()
-        plt.title('MAP estimation,\n superpix = {:d}'.format(superpix_size))
+        ax = plt.gca()
+        ax.set_title('MAP estimation,\n superpix = {:d}'.format(superpix_size))
+        im = ax.imshow(mean, cmap=cmap, vmin=vmin, vmax=vmax)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+        fig.colorbar(im, cax=cax, orientation='vertical')
+        ax.set_yticks([]);ax.set_xticks([])
+
         plt.subplot(142)
-        plt.imshow(gt_mean - mean, cmap=cmap)
-        plt.colorbar()
-        plt.title(
+        ax = plt.gca()
+        ax.set_title(
             'Residual (GT - MAP),\n RMSE = {:.3e}'.format(
                 np.sqrt(np.sum((gt_mean - mean)**2))
             )
         )
+        im = ax.imshow(gt_mean - mean, cmap=cmap)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+        fig.colorbar(im, cax=cax, orientation='vertical')
+        ax.set_yticks([]);ax.set_xticks([])
+
         plt.subplot(143)
-        plt.imshow(error_length, cmap=cmap, vmin=vmin, vmax=vmax)
-        plt.colorbar()
-        plt.title('LCI (max={:.5f})\n (<LCI>={:.5f})'.format(
-            np.max(error_length), np.mean(error_length))
+        ax = plt.gca()
+        ax.set_title('LCI (max={:.5f})\n (<LCI>={:.5f})'.format(
+                np.max(error_length), np.mean(error_length)
+            )
         )
+        im = ax.imshow(error_length, cmap=cmap, vmin=vmin, vmax=vmax)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+        fig.colorbar(im, cax=cax, orientation='vertical')
+        ax.set_yticks([]);ax.set_xticks([])
+
         plt.subplot(144)
-        plt.imshow(error_length - np.min(error_length), cmap=cmap, vmin=vmin, vmax=vmax)
-        plt.colorbar()
-        plt.title('LCI - min(LCI)')
+        ax = plt.gca()
+        ax.set_title('LCI - min(LCI)')
+        im = ax.imshow(error_length - np.min(error_length), cmap=cmap, vmin=vmin, vmax=vmax)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+        fig.colorbar(im, cax=cax, orientation='vertical')
+        ax.set_yticks([]);ax.set_xticks([])
+
         plt.savefig(
             savefig_dir+save_MAP_prefix+'_UQ-MAP_pixel_size_{:d}.pdf'.format(superpix_size)
         )
         plt.close()
-        # plt.show()
 
 
     print(
@@ -427,7 +456,6 @@ for it_1 in range(len(reg_params)):
         np.save(saving_map_path, save_map_vars, allow_pickle=True)
     except Exception as e:
         print('Could not save vairables. Exception caught: ', e)    
-
 
 
     # Define saving prefix
@@ -498,7 +526,6 @@ for it_1 in range(len(reg_params)):
 
 
     # %%
-    cmap = 'cubehelix'
 
     quantiles, st_dev_down, means_list = luq.map_uncertainty.compute_UQ(
         MC_X, superpix_sizes, alpha_prob
@@ -511,7 +538,9 @@ for it_1 in range(len(reg_params)):
 
         plt.subplot(131)
         ax = plt.gca()
-        ax.set_title(f'Mean value, <Mean val>={np.mean(means_list[it_4]):.2e} pix size={pix_size:d}')
+        ax.set_title(
+            f'Mean value, <Mean val>={np.mean(means_list[it_4]):.2e} pix size={pix_size:d}'
+        )
         im = ax.imshow(means_list[it_4], cmap=cmap)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes('right', size='5%', pad=0.05)
@@ -520,7 +549,9 @@ for it_1 in range(len(reg_params)):
 
         plt.subplot(132)
         ax = plt.gca()
-        ax.set_title(f'St Dev, <St Dev>={np.mean(st_dev_down[it_4]):.2e} pix size={pix_size:d}')
+        ax.set_title(
+            f'St Dev, <St Dev>={np.mean(st_dev_down[it_4]):.2e} pix size={pix_size:d}'
+        )
         im = ax.imshow(st_dev_down[it_4], cmap=cmap)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes('right', size='5%', pad=0.05)
@@ -554,8 +585,8 @@ for it_1 in range(len(reg_params)):
         'alpha_prob': alpha_prob,
     }
     save_vars = {
-        'X_ground_truth': torch_img.detach().cpu().squeeze().numpy(),
-        'X_dirty': x_init.detach().cpu().squeeze().numpy(),
+        'X_ground_truth': to_numpy(torch_img),
+        'X_dirty': to_numpy(x_init),
         'X_MAP': np_x_hat,
         'X_MMSE': np.mean(MC_X, axis=0),
         'post_meanvar': post_meanvar,
@@ -571,8 +602,7 @@ for it_1 in range(len(reg_params)):
 
 
     # %%
-    # Plot
-
+    # Plot sampling results
     luq.utils.plot_summaries(
         x_ground_truth=to_numpy(torch_img),
         x_dirty=to_numpy(x_init),
@@ -581,7 +611,6 @@ for it_1 in range(len(reg_params)):
         cmap=cmap,
         save_path=savefig_dir+save_prefix+'_summary_plots.pdf'
     )
-
 
     fig, ax = plt.subplots()
     ax.set_title("log pi")
@@ -623,7 +652,6 @@ for it_1 in range(len(reg_params)):
     # plt.show()
     plt.close()
 
-    nLags = 100
     if nLags < n_samples:
         luq.utils.autocor_plots(
             MC_X,
@@ -633,17 +661,13 @@ for it_1 in range(len(reg_params)):
             save_path=savefig_dir+save_prefix+'_autocorr_plot.pdf'
         )
 
-
     fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(18, 6))
     ax[0].set_title("NRMSE")
     ax[0].plot(np.arange(1, len(nrmse_values) + 1), nrmse_values)
-
     ax[1].set_title("SSIM")
     ax[1].plot(np.arange(1, len(ssim_values) + 1), ssim_values)
-
     ax[2].set_title("PSNR")
     ax[2].plot(np.arange(1, len(psnr_values) + 1), psnr_values)
-
     plt.savefig(savefig_dir+save_prefix+'_NRMSE_SSIM_PSNR_evolution.pdf')
     plt.close()
 
