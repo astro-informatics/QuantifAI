@@ -49,6 +49,9 @@ base_savedir = '/disk/xray0/tl3/outputs/large-scale-UQ/def_UQ_results/CRR'
 save_dir = base_savedir + '/vars/'
 savefig_dir = base_savedir + '/figs/'
 
+# Define my torch types (CRR requires torch.float32)
+myType = torch.float32
+myComplexType = torch.complex64
 
 # CRR load parameters
 sigma_training = 5
@@ -99,37 +102,16 @@ img_name_list = ['M31', 'W28', 'CYN', '3c288']
 for img_name in img_name_list:
         
     # %%
-
-    # Load img
-    img_path = repo_dir + '/data/imgs/{:s}.fits'.format(img_name)
-    img_data = fits.open(img_path, memmap=False)
-
-    # Loading the image and cast it to float
-    img = np.copy(img_data[0].data)[0,:,:].astype(np.float64)
-    # Flipping data
-    img = np.flipud(img)
+    # Load image and mask
+    img, mat_mask = luq.helpers.load_imgs(img_name, repo_dir)
 
     # Aliases
     x = img
     ground_truth = img
 
-
-    # Load op from X Cai
-    op_mask = sio.loadmat(
-        repo_dir + '/data/operators_masks/fourier_mask.mat'
-    )['Ma']
-
-    # Matlab's reshape works with 'F'-like ordering
-    mat_mask = np.reshape(np.sum(op_mask, axis=0), (256,256), order='F').astype(bool)
-
-    # Define my torch types
-    myType = torch.float32
-    myComplexType = torch.complex64
-
     torch_img = torch.tensor(
         np.copy(img), dtype=myType, device=device).reshape((1,1) + img.shape
     )
-
 
     phi = luq.operators.MaskedFourier_torch(
         shape=img.shape, 
@@ -193,10 +175,7 @@ for img_name in img_name_list:
     print(f"Lipschitz bound {L_CRR:.3f}")
 
 
-    # %%
-
-
-
+    # %
     for it_1 in range(len(reg_params)):
 
         # Prior parameters
@@ -315,7 +294,7 @@ for img_name in img_name_list:
             gt_mean_img_arr.append(mean_image)
 
         # Define prefix
-        save_MAP_prefix = 'CRR_UQ_MAP_lmbd_{:.1e}'.format(lmbd)
+        save_MAP_prefix = '{:s}_CRR_UQ_MAP_lmbd_{:.1e}'.format(img_name, lmbd)
 
 
         for it_pixs, superpix_size in enumerate(superpix_MAP_sizes):
@@ -461,8 +440,8 @@ for img_name in img_name_list:
 
 
         # Define saving prefix
-        save_prefix = 'SKROCK_CRR_lmbd_{:.1e}_mu_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}_frac_burn_{:.1e}'.format(
-            lmbd, mu, n_samples, thinning, frac_burnin
+        save_prefix = '{:s}_SKROCK_CRR_lmbd_{:.1e}_mu_{:.1e}_nsamples_{:.1e}_thinning_{:.1e}'.format(
+            img_name, lmbd, mu, n_samples, thinning
         )
 
         ### Sampling
