@@ -9,24 +9,102 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from statsmodels.graphics.tsaplots import plot_acf
 
 
-def to_numpy(z): 
+def to_numpy(z):
+    """
+    Converts a PyTorch tensor or variable to a numpy array on the CPU.
+
+    Args:
+        z (torch.Tensor): The input tensor or variable.
+
+    Returns:
+        numpy.ndarray: The converted numpy array.
+
+    """
     return z.detach().cpu().squeeze().numpy()
 
+
 def to_tensor(z, device='cuda', dtype=torch.float):
+    """
+    Converts a numpy array to a PyTorch tensor on a specified device.
+
+    Args:
+        z (numpy.ndarray): The input numpy array.
+        device (str): The device to place the resulting tensor on (default is 'cuda').
+        dtype (torch.dtype): The datatype of the resulting tensor (default is torch.float).
+
+    Returns:
+        torch.Tensor: The converted PyTorch tensor, reshaped to have 1 batch dimension.
+
+    """
     return torch.tensor(
         z, device=device, dtype=dtype, requires_grad=False
     ).reshape((1,1) + z.shape)
 
+
 def eval_snr(x, x_est):
+    """
+    Calculates the Signal-to-Noise Ratio (SNR) in decibels (dB) between two signals.
+
+    Args:
+        x (np.ndarray): The original signal.
+        x_est (np.ndarray): The estimated or reconstructed signal.
+
+    Returns:
+        float: The SNR between `x` and `x_est` in dB.
+
+    Raises:
+        ValueError: If `x` and `x_est` are not of the same shape, an error will be
+            raised as the signals must be of the same length to calculate SNR.
+    """
+    if x.shape != x_est.shape:
+        raise ValueError("The shapes of `x` and `x_est` must be the same to calculate SNR.")
     if np.array_equal(x, x_est):
         return 0
     num = np.sqrt(np.sum(np.abs(x) ** 2))
     den = np.sqrt(np.sum(np.abs(x - x_est) ** 2))
     return round(20 * np.log10(num / den), 2)
 
+def clip_matrix(mat, low_val=None, high_val=None):
+    """
+    Clips the values of a numpy matrix to within a specified range.
+
+    Args:
+        mat (np.ndarray): The input matrix to be clipped.
+        low_val (float or None): The minimum value to clip the matrix to.
+            If None, the matrix will not be clipped at the lower end.
+        high_val (float or None): The maximum value to clip the matrix to.
+            If None, the matrix will not be clipped at the upper end.
+
+    Returns:
+        np.ndarray: The clipped matrix.
+
+    """
+    if low_val is not None:
+        mat[mat<low_val] = low_val
+    if high_val is not None:
+        mat[mat>=high_val] = high_val
+    return mat
+
 
 def blur_operators(kernel_len, size, type_blur, device):
+    """
+    Generates the forward and backward blur operators for a given blur kernel type and size.
 
+    Args:
+        kernel_len (tuple): The length of the blur kernel in the x and y directions.
+        size (tuple): The size of the image being blurred in the x and y directions.
+        type_blur (str): The type of blur kernel to use. Only 'uniform' is currently supported.
+        device (str): The device to place the resulting operators on (e.g. 'cuda', 'cpu').
+
+    Returns:
+        Tuple of functions and scalar: A tuple containing the forward operator `A`,
+            the backward operator `AT`, and the normalization constant `AAT_norm`.
+
+    Raises:
+        NotImplementedError: If `type_blur` is not 'uniform', an error will be raised
+            as only uniform blur is currently supported.
+
+    """
     nx = size[0]
     ny = size[1]
     if type_blur=='uniform':
@@ -136,73 +214,83 @@ class welford:
 
 
 def ESS(arr):
-    '''
-    Input: 
-        - arr (vector): This vector contains the trace of the Markov chain
-    Output:
-        - ess (float): effective sample size of the trace.
-    '''
+    """Calculate the effective sample size (ESS) of an array.
+
+    This function uses the ArviZ package to calculate the ESS.
+
+    Args:
+        arr (np.ndarray): The array for which to calculate the ESS, usually
+            the trace of the Markov chain.
+
+    Returns:
+        float: The effective sample size of the array.
+    """
     ess = arviz.ess(arr)
     return ess
 
-# ---  Create the necessary function for the autocorrelation plot
+
 def autocor_plots(X_chain, var, method_str, nLags=100, save_path=None):
-    '''
-    Inputs:
-        - X_chain (Matrix): Markov chain
-        - var (matrix): Variance of the Markov chain computed in the Fourier domain.
-        - M=method_str (string): Name of the Markov chain used
-        - nLags (int): Number of lags used for the autocorrelation function.
-        - save_path (str): Path to save the figure. If None, the figure is not saved.
-    Outputs:
-        - Autocorrelation plots. we also highligthed the effective sample size for each trace.
-    '''
+    """Plots autocorrelation functions of traces of a Markov Chain.
     
-    # --- Checking whether the samples size is greater than the number of lags considered.
+    Args:
+        X_chain (np.ndarray):  The Markov chain with shape `(num_samples, num_variables)`.
+        var (np.ndarray): The variance in the Fourier domain.
+        method_str (str): The name of the algorithm/method used to obtain the samples.
+        nLags (int): Number of lags.
+        save_path (str or None): Path to save the figure. If None, the figure is not saved.
+
+    Raises:
+        ValueError: if the number of lags is greater than the number of samples.
+
+    Returns:
+        None
+    """
+    
+    # Checking whether the samples size is greater than the number of lags considered.
     if X_chain.shape[0] < nLags:
         raise ValueError(f"nLags must be smaller than the number of samples!")
     
-   # --- 
+    # Convert tensor to numpy array
     if torch.is_tensor(X_chain):
         X_chain = X_chain.detach().cpu().numpy()
     
-    # --- Vectorise the the variance in the Fourier domain
-    var_fft = var.reshape(-1,1)
+    # Vectorise the variance in the Fourier domain
+    var_fft = var.reshape(-1, 1)
     
-    # --- Vectorise the the Markov chain
-    X_chain_vec = X_chain.reshape(len(X_chain),-1)
+    # Vectorise the Markov chain
+    X_chain_vec = X_chain.reshape(len(X_chain), -1)
     
-    # --- Variance of the Markov not in the spatial
-    var_sp = np.var(X_chain_vec, axis = 0)
+    # Variance of the Markov not in the spatial
+    var_sp = np.var(X_chain_vec, axis=0)
     
-    # --- lower trace of the Markov chain
-    trace_elem_max_variance = X_chain_vec[:,np.argmax(var_sp)]
+    # Trace of the Markov chain with the maximum variance
+    trace_elem_max_variance = X_chain_vec[:, np.argmax(var_sp)]
     
-     # --- Faster trace of the Markov chain
-    trace_elem_min_variance = X_chain_vec[:,np.argmin(var_sp)]
+    # Trace of the Markov chain with the minimum variance
+    trace_elem_min_variance = X_chain_vec[:, np.argmin(var_sp)]
     
-     # --- Medium-speed trace of the Markov chain
+    # Trace of the Markov chain with median variance
     ind_medium = np.argsort(var_sp)[len(var_sp)//2]
-    trace_elem_median_variance = X_chain_vec[:,ind_medium]
+    trace_elem_median_variance = X_chain_vec[:, ind_medium]
     
-    # --- effective sample size
+    # Effective sample size
     e_slow = ESS(trace_elem_max_variance.reshape(-1))
     e_fast = ESS(trace_elem_min_variance.reshape(-1))
-    e_med  = ESS(trace_elem_median_variance.reshape(-1))
+    e_med = ESS(trace_elem_median_variance.reshape(-1))
 
-    # --- Here we are generating the autocorrelation function for these three traces: lower, medium and faster.
-    fig,ax = plt.subplots(figsize=(15,10))
-    plot_acf(trace_elem_median_variance,ax=ax,label=f'Median-speed, ESS = {e_med: .2f}',alpha=None,lags=nLags)
-    plot_acf(trace_elem_max_variance,ax=ax,label=f'Slowest, ESS = {e_slow: .2f}',alpha=None,lags=nLags)
-    plot_acf(trace_elem_min_variance,ax=ax,label=f'Fastest, ESS = {e_fast: .2f}',alpha=None,lags=nLags)
-    handles, labels= ax.get_legend_handles_labels()
-    handles=handles[1::2]
-    labels =labels[1::2]
+    # Generate the autocorrelation function for these three traces: lower, medium and faster.
+    fig, ax = plt.subplots(figsize=(15,10))
+    plot_acf(trace_elem_median_variance, ax=ax, label=f'Median-speed, ESS = {e_med: .2f}', alpha=None, lags=nLags)
+    plot_acf(trace_elem_max_variance, ax=ax, label=f'Slowest, ESS = {e_slow: .2f}', alpha=None, lags=nLags)
+    plot_acf(trace_elem_min_variance, ax=ax, label=f'Fastest, ESS = {e_fast: .2f}', alpha=None, lags=nLags)
+    handles, labels = ax.get_legend_handles_labels()
+    handles = handles[1::2]
+    labels = labels[1::2]
     ax.set_title(method_str)
     ax.set_ylabel("ACF")
     ax.set_xlabel("lags")
-    ax.set_ylim([-1.1,1.3])
-    ax.legend(handles=handles, labels=labels,loc='best',shadow=True, numpoints=1)
+    ax.set_ylim([-1.1, 1.3])
+    ax.legend(handles=handles, labels=labels, loc='best', shadow=True, numpoints=1)
 
     if save_path is not None:
         plt.savefig(save_path)
@@ -223,9 +311,12 @@ def plot_summaries(
         x_dirty (np.ndarray): Dirty image.
         post_meanvar (welford instance): Instance of welford with torch variables
             saving the MC samples.
-        post_meanvar_absfourier (welford instance): Instance of welford with 
-        torch variables saving the absolute values of Fourier coefficients of MC samples.
+        post_meanvar_absfourier (welford instance): Instance of welford with torch
+            variables saving the absolute values of Fourier coefficients of MC samples.
         save_path (str): Path to save the figure. If None, the figure is not saved.
+    
+    Returns:
+        None
     """
     
     post_mean_numpy = post_meanvar.get_mean().detach().cpu().squeeze().numpy()
@@ -234,7 +325,7 @@ def plot_summaries(
     fig, axes = plt.subplots(nrows=2, ncols=4, figsize = (18,10))
     fig.tight_layout(pad=.01)
     
-    # --- Ground truth
+    # Ground truth
     im = axes[0,0].imshow(x_ground_truth, cmap=cmap)
     axes[0,0].set_title('Ground truth image')
     axes[0,0].axis('off')
@@ -242,7 +333,7 @@ def plot_summaries(
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im, cax=cax, orientation='vertical')
 
-    # --- Blurred
+    # Dirty image
     im = axes[0,1].imshow(x_dirty, cmap=cmap)
     axes[0,1].set_title('Dirty image')
     axes[0,1].axis('off')
@@ -250,7 +341,7 @@ def plot_summaries(
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im, cax=cax, orientation='vertical')
 
-    # --- MMSE
+    # MMSE
     im = axes[0,2].imshow(post_mean_numpy, cmap=cmap)
     axes[0,2].set_title('x - posterior mean')
     axes[0,2].axis('off')
@@ -258,7 +349,7 @@ def plot_summaries(
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im, cax=cax, orientation='vertical')
 
-    # --- Variance
+    # Variance
     im = axes[0,3].imshow(post_var_numpy, cmap=cmap)
     axes[0,3].set_title('x - posterior variance')
     axes[0,3].axis('off')
@@ -266,15 +357,18 @@ def plot_summaries(
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im, cax=cax, orientation='vertical')
 
-    # --- MMSE / Var
-    im = axes[1,0].imshow(post_mean_numpy/np.sqrt(post_meanvar.get_var().detach().cpu().squeeze().numpy()), cmap=cmap)
+    # MMSE / Var
+    im = axes[1,0].imshow(
+        post_mean_numpy/np.sqrt(post_meanvar.get_var().detach().cpu().squeeze().numpy()),
+        cmap=cmap
+    )
     axes[1,0].set_title('x - posterior mean/posterior SD')
     axes[1,0].axis('off')
     divider = make_axes_locatable(axes[1,0])
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im, cax=cax, orientation='vertical')
 
-    # --- Var / MMSE
+    # Var / MMSE
     im = axes[1,1].imshow(np.sqrt(post_var_numpy)/post_mean_numpy,cmap=cmap)
     axes[1,1].set_title('x - Coefs of variation')
     axes[1,1].axis('off')
@@ -282,7 +376,7 @@ def plot_summaries(
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im, cax=cax, orientation='vertical')
 
-    # --- Mean Fourier coefs
+    # Mean Fourier coefs
     im = axes[1,2].imshow(torch.log(post_meanvar_absfourier.get_mean()).detach().cpu().squeeze().numpy())
     axes[1,2].set_title('Mean coefs (log-scale)')
     axes[1,2].axis('off')
@@ -290,7 +384,7 @@ def plot_summaries(
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im, cax=cax, orientation='vertical')
     
-    # --- Variance Fourier coefs
+    # Variance Fourier coefs
     im = axes[1,3].imshow(torch.log(post_meanvar_absfourier.get_var()).detach().cpu().squeeze().numpy())
     axes[1,3].set_title('Var coefs (log-scale)')
     axes[1,3].axis('off')
