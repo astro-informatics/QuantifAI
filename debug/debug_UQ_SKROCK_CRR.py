@@ -31,6 +31,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import scipy.io as sio
 from astropy.io import fits
+import skimage as ski
 
 import large_scale_UQ as luq
 from large_scale_UQ.utils import to_numpy, to_tensor
@@ -164,6 +165,9 @@ superpix_MAP_sizes = [32, 16, 8, 4]
 
 # Compute the sampling UQ plots
 superpix_sizes = [32,16,8,4,1]
+# Clipping values. Set as None for no clipping
+clip_high_val = 1.
+clip_low_val = 0.
 
 # Sampling alg params
 frac_delta = 0.98
@@ -287,15 +291,24 @@ for it_1 in range(len(reg_params)):
 
     error_p_arr = []
     error_m_arr = []
+    mean_img_arr = []
     computing_time = []
 
     x_init_np = luq.utils.to_numpy(x_init)
+
+    # Compute ground truth block 
+    gt_mean_img_arr = []
+    for superpix_size in superpix_MAP_sizes:
+        mean_image = ski.measure.block_reduce(
+            np.copy(img), block_size=(superpix_size, superpix_size), func=np.mean
+        )
+        gt_mean_img_arr.append(mean_image)
 
     # Define prefix
     save_MAP_prefix = 'CRR_UQ_MAP_lmbd_{:.1e}'.format(lmbd)
 
 
-    for superpix_size in superpix_MAP_sizes:
+    for it_pixs, superpix_size in enumerate(superpix_MAP_sizes):
 
         pr_time_1 = time.process_time()
         wall_time_1 = time.time()
@@ -310,46 +323,53 @@ for it_1 in range(len(reg_params)):
             bottom=LCI_bottom,
             top=LCI_top,
         )
-        error_length = error_p - error_m
-
         pr_time_2 = time.process_time()
         wall_time_2 = time.time()
-
+        # Add values to array to save it later
         error_p_arr.append(np.copy(error_p))
         error_m_arr.append(np.copy(error_m))
+        mean_img_arr.append(np.copy(mean))
         computing_time.append((
             pr_time_2 - pr_time_1, 
             wall_time_2 - wall_time_1
         ))
+        # Clip plot values
+        error_length = luq.utils.clip_matrix(
+            np.copy(error_p), clip_low_val, clip_high_val
+        ) - luq.utils.clip_matrix(
+            np.copy(error_m), clip_low_val, clip_high_val
+        )
+        # Recover the ground truth mean
+        gt_mean = mean_img_arr[it_pixs]
 
-        vmin = np.min((x, x_init_np, np_x_hat))
-        vmax = np.max((x, x_init_np, np_x_hat))
+        vmin = np.min((gt_mean, mean, error_length))
+        vmax = np.max((gt_mean, mean, error_length))
         # err_vmax= 0.6
         cmap='cubehelix'
 
-        plt.figure(figsize=(28,12))
-        plt.subplot(241)
-        plt.imshow(x, cmap=cmap, vmin=vmin, vmax=vmax);plt.colorbar()
-        plt.title('Ground truth')
-        plt.subplot(242)
-        plt.imshow(x_init_np, cmap=cmap, vmin=vmin, vmax=vmax);plt.colorbar()
-        plt.title('Dirty')
-        plt.subplot(243)
-        plt.imshow(np_x_hat, cmap=cmap, vmin=vmin, vmax=vmax);plt.colorbar()
-        plt.title('MAP estimator')
-        plt.subplot(244)
-        plt.imshow(x - np_x_hat, cmap=cmap);plt.colorbar()
-        plt.title('Ground truth - MAP estimator')
-        plt.subplot(245)
-        plt.imshow(error_length, cmap=cmap);plt.colorbar()
-        plt.title('LCI (max={:.5f})\n (mean={:.5f})'.format(
+        plt.figure(figsize=(24,5))
+        plt.subplot(141)
+        plt.imshow(mean, cmap=cmap, vmin=vmin, vmax=vmax)
+        plt.colorbar()
+        plt.title('MAP estimation,\n superpix = {:d}'.format(superpix_size))
+        plt.subplot(142)
+        plt.imshow(gt_mean - mean, cmap=cmap)
+        plt.colorbar()
+        plt.title(
+            'Residual (GT - MAP),\n RMSE = {:.3e}'.format(
+                np.sqrt(np.sum((gt_mean - mean)**2))
+            )
+        )
+        plt.subplot(143)
+        plt.imshow(error_length, cmap=cmap, vmin=vmin, vmax=vmax)
+        plt.colorbar()
+        plt.title('LCI (max={:.5f})\n (<LCI>={:.5f})'.format(
             np.max(error_length), np.mean(error_length))
         )
-        plt.subplot(246)
-        plt.imshow(error_length - np.mean(error_length), cmap='viridis');plt.colorbar()
-        plt.title('LCI - <LCI>')
-        plt.subplot(247)
-        plt.imshow(mean, cmap=cmap);plt.colorbar();plt.title('Mean')
+        plt.subplot(144)
+        plt.imshow(error_length - np.min(error_length), cmap=cmap, vmin=vmin, vmax=vmax)
+        plt.colorbar()
+        plt.title('LCI - min(LCI)')
         plt.savefig(
             savefig_dir+save_MAP_prefix+'_UQ-MAP_pixel_size_{:d}.pdf'.format(superpix_size)
         )
@@ -394,6 +414,7 @@ for it_1 in range(len(reg_params)):
         'hpd_results': hpd_results,
         'error_p_arr': error_p_arr,
         'error_m_arr': error_m_arr,
+        'mean_img_arr': mean_img_arr,
         'computing_time': computing_time,
         'superpix_sizes': superpix_MAP_sizes,
         'LCI_params': LCI_params,
@@ -553,8 +574,8 @@ for it_1 in range(len(reg_params)):
     # Plot
 
     luq.utils.plot_summaries(
-        x_ground_truth=torch_img.detach().cpu().squeeze().numpy(),
-        x_dirty=x_init.detach().cpu().squeeze().numpy(),
+        x_ground_truth=to_numpy(torch_img),
+        x_dirty=to_numpy(x_init),
         post_meanvar=post_meanvar,
         post_meanvar_absfourier=absfouriercoeff,
         cmap=cmap,
