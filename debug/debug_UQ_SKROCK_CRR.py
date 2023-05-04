@@ -419,6 +419,7 @@ for img_name in img_name_list:
             'top': LCI_top,
         }
         save_map_vars = {
+            'x_ground_truth': img,
             'x_map': np_x_hat,
             'x_init': np_x_init,
             'opt_params': opt_params,
