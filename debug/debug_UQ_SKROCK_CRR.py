@@ -660,11 +660,15 @@ for img_name in img_name_list:
             save_path = '{:s}{:s}{:s}'.format(
                 save_dir, save_prefix, '_vars.npy'
             )
+            if os.path.isfile(save_path):
+                os.remove(save_path)
             np.save(save_path, save_vars, allow_pickle=True)
 
             save_samples_path = '{:s}{:s}{:s}'.format(
                 save_dir, save_prefix, '_samples.npy'
             )
+            if os.path.isfile(save_samples_path):
+                os.remove(save_samples_path)
             np.save(save_samples_path, MC_X, allow_pickle=True)
         except Exception as e:
             print('Could not save vairables. Exception caught: ', e)
