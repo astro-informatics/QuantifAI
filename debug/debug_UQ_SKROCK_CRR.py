@@ -427,6 +427,7 @@ for img_name in img_name_list:
             'error_p_arr': error_p_arr,
             'error_m_arr': error_m_arr,
             'mean_img_arr': mean_img_arr,
+            'gt_mean_img_arr': gt_mean_img_arr,
             'computing_time': computing_time,
             'superpix_sizes': superpix_MAP_sizes,
             'LCI_params': LCI_params,
