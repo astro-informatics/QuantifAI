@@ -417,6 +417,8 @@ for img_name in img_name_list:
             'tol': LCI_tol,
             'bottom': LCI_bottom,
             'top': LCI_top,
+            'clip_low_val': clip_low_val,
+            'clip_high_val': clip_high_val,
         }
         save_map_vars = {
             'x_ground_truth': img,
