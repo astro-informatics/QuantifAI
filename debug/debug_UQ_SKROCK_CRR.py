@@ -329,7 +329,7 @@ for img_name in img_name_list:
                 np.copy(error_m), clip_low_val, clip_high_val
             )
             # Recover the ground truth mean
-            gt_mean = mean_img_arr[it_pixs]
+            gt_mean = gt_mean_img_arr[it_pixs]
 
             vmin = np.min((gt_mean, mean, error_length))
             vmax = np.max((gt_mean, mean, error_length))
