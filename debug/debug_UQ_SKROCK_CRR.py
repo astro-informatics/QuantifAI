@@ -474,8 +474,6 @@ for img_name in img_name_list:
         for i_x in tqdm(range(maxit)):
 
             # Update X
-            # X = luq.sampling.ULA_kernel(X, delta, grad_f)
-            # Update X
             X = luq.sampling.SKROCK_kernel(
                 X, Lipschitz_U=Lip_total, nStages=nStages, eta=eta, dt_perc=dt_perc,
                 grad_likelihood_prior=grad_f
@@ -512,7 +510,7 @@ for img_name in img_name_list:
 
 
         # %%
-
+        # Compute the UQ plots
         quantiles, st_dev_down, means_list = luq.map_uncertainty.compute_UQ(
             MC_X, superpix_sizes, alpha_prob
         )
