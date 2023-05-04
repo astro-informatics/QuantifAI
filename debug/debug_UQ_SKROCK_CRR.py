@@ -420,6 +420,7 @@ for img_name in img_name_list:
         }
         save_map_vars = {
             'x_map': np_x_hat,
+            'x_init': np_x_init,
             'opt_params': opt_params,
             'hpd_results': hpd_results,
             'error_p_arr': error_p_arr,
