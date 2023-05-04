@@ -63,7 +63,7 @@ mu = 20
 
 
 # LCI params
-alpha_prob = 0.05
+alpha_prob = 0.01
 
 # LCI algorithm parameters (bisection)
 LCI_iters = 200
