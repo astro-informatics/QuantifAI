@@ -55,8 +55,6 @@ savefig_dir = base_savedir + '/figs/'
 myType = torch.float64
 myComplexType = torch.complex128
 
-
-# CRR load parameters
 # Wavelet parameters
 reg_params = [5e2] # [5e2, 5e1, 1e3, 5e3, 1e4, 5e4]
 wavs_list = ['db8']
