@@ -1,0 +1,25 @@
+name: convex_uq2
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=11.7
+  - cudatoolkit-dev
+  - numpy=1.23.5
+  - scipy
+  - statsmodels
+  - pip:
+      - matplotlib
+      - tqdm
+      - scikit-image
+      - astropy
+      - ptwt
+      - arviz
+      - git+https://github.com/tobias-liaudat/convex_ridge_regularizers@v0.1
