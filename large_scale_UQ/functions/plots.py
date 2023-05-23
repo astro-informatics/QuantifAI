@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from skimage.measure import block_reduce
-from .measures import PSNR, SSIM, NRMSE
 
 
 def plot_im(x, title="Title"):
