@@ -302,32 +302,3 @@ def create_local_credible_interval_fast(
             )
     return error_p, error_m, mean
 
-
-# def create_superpixel_map(x_sol, region_size):
-#     """Bisection method for finding credible interval."""
-#
-#!     region = np.zeros(x_sol.shape)
-#     if len(x_sol.shape) > 1:
-#!         region[:region_size, :region_size] = 1.0
-#         dsizey, dsizex = int(x_sol.shape[0] / region_size), int(
-#             x_sol.shape[1] / region_size
-#         )
-#         mean = np.zeros((dsizey, dsizex))
-#         for i in range(dsizey):
-#             for j in range(dsizex):
-#                 mask = np.roll(
-#                     np.roll(region, shift=i * region_size, axis=0),
-#                     shift=j * region_size,
-#                     axis=1,
-#                 )
-#                 x_sum = np.nansum(np.ravel(x_sol[(mask.astype(bool))]))
-#                 mean[i, j] = x_sum
-#     else:
-#!         region[:region_size] = 1.0
-#         dsizey = int(x_sol.shape[0] / region_size)
-#         mean = np.zeros((dsizey))
-#         for i in range(dsizey):
-#             mask = np.roll(region, shift=i * region_size, axis=0)
-#             x_sum = np.nansum(np.ravel(x_sol[(mask.astype(bool))]))
-#             mean[i] = x_sum
-#     return mean
