@@ -2,8 +2,6 @@ import numpy as np
 import logging
 import skimage as ski
 
-# logger = logging.getLogger("Optimus Primal")
-
 
 def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.05):
     """Compute uncertainty quantification stats.
