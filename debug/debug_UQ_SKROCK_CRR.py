@@ -195,7 +195,7 @@ for img_name in img_name_list:
             x_hat = z - alpha *(
                 g.grad(z) + lmbd * model(mu * z)
             )
-            # Positivity constraint
+            # Reality constraint
             x_hat = f.prox(x_hat)
             # Positivity constraint
             # x = torch.clamp(x, 0, None)
