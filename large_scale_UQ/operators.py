@@ -946,16 +946,16 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         super().__init__()
 
         if Psi is None:
-            self.Psi = luq.empty.Identity()
+            self.Psi = Identity()
             self.levels = 0
             self.num_wavs = 0
         else:
             self.Psi = Psi
-            if type(self.Psi) is luq.operators.Wavelets_torch:
+            if type(self.Psi) is Wavelets_torch:
                 # Number of wavelets used in the dictionary
                 self.num_wavs = 1
 
-            elif type(self.Psi) is luq.operators.DictionaryWv_torch:
+            elif type(self.Psi) is DictionaryWv_torch:
                 # Number of wavelets used in the dictionary
                 self.num_wavs = len(self.Psi.wavelet_list)
 
