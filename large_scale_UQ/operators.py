@@ -929,3 +929,286 @@ class RealProx_torch(torch.nn.Module):
         """
         return x
 
+
+class Operation2WaveletCoeffs_torch(torch.nn.Module):
+    """This class helps to apply operations to wavelet coefficients.
+
+    """
+
+    def __init__(self, Psi=None):
+        """Initialise
+
+        Args:
+            Psi (Linear operator): Wavelet transform class
+
+
+        """
+        super().__init__()
+
+        if Psi is None:
+            self.Psi = luq.empty.Identity()
+            self.levels = 0
+            self.num_wavs = 0
+        else:
+            self.Psi = Psi
+            if type(self.Psi) is luq.operators.Wavelets_torch:
+                # Number of wavelets used in the dictionary
+                self.num_wavs = 1
+
+            elif type(self.Psi) is luq.operators.DictionaryWv_torch:
+                # Number of wavelets used in the dictionary
+                self.num_wavs = len(self.Psi.wavelet_list)
+
+            # Set the number of wavelets scales
+            self.levels = self.Psi.levels
+
+
+    def _apply_op_to_coeffs(self, coeffs, op):
+        """Applies operation to all coefficients in ptwt structure.
+        
+        """
+        # Iterate over the wavelet dictionaries
+        for wav_i in range(self.num_wavs):
+            # Apply op over the low freq approx
+            coeffs[wav_i][0] = op(coeffs[wav_i][0])
+            # Iterate over the wavelet decomp and apply op
+            for it1 in range(1, len(coeffs[0])):
+                coeffs[wav_i][it1] = tuple([op(elem) for elem in  coeffs[wav_i][it1]])
+
+        return coeffs
+
+    def _apply_op_to_coeffs_at_level(self, coeffs, level, op):
+        """Applies operation to all coefficients at a given level in ptwt structure.
+        
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+        """
+        if level is None:
+            coeffs = self._apply_op_to_coeffs(coeffs, op)
+        else:
+            # Iterate over the wavelet dictionaries
+            for wav_i in range(self.num_wavs):
+                if level == 0:
+                    # Apply op over the low freq approx
+                    coeffs[wav_i][0] = op(coeffs[wav_i][0])
+                elif level > 0  and level <= len(coeffs[0]):
+                    # Iterate over the wavelet decomp and apply op
+                    coeffs[wav_i][level] = tuple([op(elem) for elem in  coeffs[wav_i][level]])
+                else:
+                    raise ValueError(
+                        'The level requested is higher than the one used in the wavelet decomposition.'
+                    )
+
+        return coeffs
+    
+    def _op_to_two_coeffs(self, coeffs1, coeffs2, op):
+        """Applies operation to two set of coefficients in ptwt structure.
+
+        Saves result in coeffs1.
+
+        Args:
+
+            coeffs1 (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                First set of wavelet coefficients
+            coeffs2 (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                Second set of wavelet coefficients
+            op (function): Operation to apply
+        
+        Returns:
+
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]): 
+                Resulting coefficients
+        """
+        # Iterate over the wavelet dictionaries
+        for wav_i in range(self.num_wavs):
+            # Apply op over the low freq approx
+            coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+            # Iterate over the wavelet decomp and apply op
+            for it1 in range(1, len(coeffs1[0])):
+                coeffs1[wav_i][it1] = tuple(
+                    [op(elem1, elem2) for elem1, elem2 in zip(
+                        coeffs1[wav_i][it1], coeffs2[wav_i][it1]
+                    )]
+                )
+        return coeffs1
+
+    def _get_max_abs_coeffs(self, coeffs):
+        """Get the max abs value of all coefficients
+
+        Args:
+
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                Set of wavelet coefficients
+
+        Returns:
+
+            max abs value of all coefficients
+        """
+        max_val = []
+        # Iterate over the wavelet dictionaries
+        for wav_i in range(self.num_wavs):
+            # Apply op over the low freq approx
+            max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
+            # Iterate over the wavelet decompositions
+            for it1 in range(1, len(coeffs[0])):
+                for it2 in range(len(coeffs[wav_i][it1])):
+                    max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
+
+        # Apply operation to the coefficients
+        return torch.max(torch.tensor(max_val)).item()    
+
+
+    def threshold_coeffs(self, coeffs, thresh, level=None):
+        """Threshold coefficients and put to zero
+
+        Args:
+
+            coeffs (ptwt.coeffs): Wavelet coefficients
+            thresh (double): Threshold
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+
+        Returns:
+
+            Thresholded coefficients (ptwt.coeffs)
+        """
+        # Define the element-wise operation
+        op = lambda _x: self._threshold(_x, thresh=thresh)
+        # Apply operation to the coefficients
+        return self._apply_op_to_coeffs_at_level(coeffs, level, op)
+    
+    def full_op_threshold_img(self, img, thresh, level=None):
+        """Threshold image wavelet coefficients
+
+        Args:
+
+            img (torch.Tensor): Image [H,W]
+            thresh (double): Threshold
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+
+        Returns:
+
+            Thresholded img (torch.Tensor)
+        """
+        return self.adj_op(self.threshold_coeffs(
+                    self.dir_op(img), thresh=thresh, level=level
+                )).squeeze()
+
+    def full_op_add_img(self, img, val, level=None):
+        """Add val to image wavelet coefficients at given level
+
+        Args:
+
+            img (torch.Tensor): Image [H,W]
+            thresh (double): Threshold
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+
+        Returns:
+
+            Modified img (torch.Tensor)
+        """
+        return self.adj_op(self.add_value_at_level(
+                    self.dir_op(img), level=level, val=val
+                )).squeeze()
+
+    def full_op_mult_img(self, img, val, level=None):
+        """Multiply val to image wavelet coefficients at given level
+
+        Args:
+
+            img (torch.Tensor): Image [H,W]
+            thresh (double): Threshold
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+
+        Returns:
+
+            Modified img (torch.Tensor)
+        """
+        return self.adj_op(self.mult_value_at_level(
+                    self.dir_op(img), level=level, val=val
+                )).squeeze()
+    
+    def add_value_at_level(self, coeffs, level, val):
+        """Threshold coefficients and put to zero
+
+        Args:
+
+            coeffs (ptwt.coeffs): Wavelet coefficients
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+            val (double): value
+
+        Returns:
+
+            Modified coefficients (ptwt.coeffs)
+        """
+        # Define the element-wise operation
+        op = lambda _x: _x + val
+        # Apply operation to the coefficients
+        return self._apply_op_to_coeffs_at_level(coeffs, level, op)
+
+    def mult_value_at_level(self, coeffs, level, val):
+        """Threshold coefficients and put to zero
+
+        Args:
+
+            coeffs (ptwt.coeffs): Wavelet coefficients
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+            val (double): value
+
+        Returns:
+
+            Modified coefficients (ptwt.coeffs)
+        """
+        # Define the element-wise operation
+        op = lambda _x: _x * val
+        # Apply operation to the coefficients
+        return self._apply_op_to_coeffs_at_level(coeffs, level, op)
+
+    def _threshold(self, x, thresh):
+        """Threshold coefficients
+
+        Args:
+
+            x (torch.Tensor): tensor to operate on
+            thresh (double): Threhsold
+
+        Returns:
+
+            Thresholded version of x
+        """
+        # Replaced the use of torch.sign() to add complex value support
+        abs_x = torch.abs(x)
+        return torch.maximum(
+                torch.zeros_like(abs_x), abs_x - thresh
+            ) * torch.nan_to_num(x / abs_x, nan=0.0)
+     
+    def dir_op(self, x):
+        """Evaluates the forward regularisation operator
+
+        Args:
+
+            x (torch.Tensor): Tensor to forward transform
+
+        Returns:
+
+            Forward regularisation operator applied to x
+        """
+        return self.Psi.dir_op(x)
+
+    def adj_op(self, x):
+        """Evaluates the forward adjoint regularisation operator
+
+        Args:
+
+            x (torch.Tensor): Tensor to adjoint transform
+
+        Returns:
+
+            Forward adjoint regularisation operator applied to x
+        """
+        return self.Psi.adj_op(x)
