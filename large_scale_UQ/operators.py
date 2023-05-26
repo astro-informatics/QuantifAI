@@ -992,7 +992,7 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
                     # Apply op over the low freq approx
                     coeffs[wav_i][0] = op(coeffs[wav_i][0])
                 elif level > 0  and level <= len(coeffs[0]):
-                    # Iterate over the wavelet decomp and apply op
+                    # Apply op to specific level
                     coeffs[wav_i][level] = tuple([op(elem) for elem in  coeffs[wav_i][level]])
                 else:
                     raise ValueError(
@@ -1032,6 +1032,44 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
                 )
         return coeffs1
 
+    def _op_to_two_coeffs_at_level(self, coeffs1, coeffs2, level, op):
+        """Applies operation to two set of coefficients in ptwt structure at a certain level.
+
+        Saves result in coeffs1.
+
+        Args:
+
+            coeffs1 (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                First set of wavelet coefficients
+            coeffs2 (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
+                Second set of wavelet coefficients
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+            op (function): Operation to apply
+        
+        Returns:
+
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]): 
+                Resulting coefficients
+        """
+        if level is None:
+            coeffs1 = self._op_to_two_coeffs(coeffs1, coeffs2, op)
+        else:
+            # Iterate over the wavelet dictionaries
+            for wav_i in range(self.num_wavs):
+                if level == 0:
+                    # Apply op over the low freq approx
+                    coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+                elif level > 0  and level <= len(coeffs1[0]):
+                    # Apply op to specific level
+                    coeffs1[wav_i][level] = tuple(
+                        [op(elem1, elem2) for elem1, elem2 in zip(
+                            coeffs1[wav_i][level], coeffs2[wav_i][level]
+                        )]
+                    )
+
+        return coeffs1
+
     def _get_max_abs_coeffs(self, coeffs):
         """Get the max abs value of all coefficients
 
@@ -1057,7 +1095,6 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         # Apply operation to the coefficients
         return torch.max(torch.tensor(max_val)).item()    
 
-
     def threshold_coeffs(self, coeffs, thresh, level=None):
         """Threshold coefficients and put to zero
 
@@ -1076,7 +1113,26 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         op = lambda _x: self._threshold(_x, thresh=thresh)
         # Apply operation to the coefficients
         return self._apply_op_to_coeffs_at_level(coeffs, level, op)
-    
+
+    def full_op_two_img(self, img1, img2, op, level=None):
+        """Apply op to two image wavelet coefficients
+
+        Args:
+
+            img1 (torch.Tensor): Image n1 [H,W]
+            img2 (torch.Tensor): Image n2 [H,W]
+            op (function): Operation to apply
+            level (int or None): Level of wavelet decomposition to apply the operation.
+                If the level is None, the operation is applied to all existing levels.
+
+        Returns:
+
+            Modified img (torch.Tensor)
+        """
+        return self.adj_op(self._op_to_two_coeffs_at_level(
+                    self.dir_op(img1), self.dir_op(img2), level=level, op=op
+                )).squeeze()
+
     def full_op_threshold_img(self, img, thresh, level=None):
         """Threshold image wavelet coefficients
 
