@@ -1095,13 +1095,14 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         # Apply operation to the coefficients
         return torch.max(torch.tensor(max_val)).item()    
 
-    def threshold_coeffs(self, coeffs, thresh, level=None):
+    def threshold_coeffs(self, coeffs, thresh, thresh_type, level=None):
         """Threshold coefficients and put to zero
 
         Args:
 
             coeffs (ptwt.coeffs): Wavelet coefficients
             thresh (double): Threshold
+            thresh_type (str): type of thresholding. Options are: 'soft' or 'hard'.
             level (int or None): Level of wavelet decomposition to apply the operation.
                 If the level is None, the operation is applied to all existing levels.
 
@@ -1110,7 +1111,10 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
             Thresholded coefficients (ptwt.coeffs)
         """
         # Define the element-wise operation
-        op = lambda _x: self._threshold(_x, thresh=thresh)
+        if thresh_type == 'soft':
+            op = lambda _x: self._threshold_soft(_x, thresh=thresh)
+        elif thresh_type == 'hard':
+            op = lambda _x: self._threshold_hard(_x, thresh=thresh)
         # Apply operation to the coefficients
         return self._apply_op_to_coeffs_at_level(coeffs, level, op)
 
@@ -1133,7 +1137,7 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
                     self.dir_op(img1), self.dir_op(img2), level=level, op=op
                 )).squeeze()
 
-    def full_op_threshold_img(self, img, thresh, level=None):
+    def full_op_threshold_img(self, img, thresh, level=None, thresh_type='soft'):
         """Threshold image wavelet coefficients
 
         Args:
@@ -1142,13 +1146,14 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
             thresh (double): Threshold
             level (int or None): Level of wavelet decomposition to apply the operation.
                 If the level is None, the operation is applied to all existing levels.
+            thresh_type (str): type of thresholding. Options are: 'soft' or 'hard'.
 
         Returns:
 
             Thresholded img (torch.Tensor)
         """
         return self.adj_op(self.threshold_coeffs(
-                    self.dir_op(img), thresh=thresh, level=level
+                    self.dir_op(img), thresh=thresh, thresh_type=thresh_type, level=level
                 )).squeeze()
 
     def full_op_add_img(self, img, val, level=None):
@@ -1225,8 +1230,8 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         # Apply operation to the coefficients
         return self._apply_op_to_coeffs_at_level(coeffs, level, op)
 
-    def _threshold(self, x, thresh):
-        """Threshold coefficients
+    def _threshold_soft(self, x, thresh):
+        """Threshold coefficients (soft)
 
         Args:
 
@@ -1242,7 +1247,23 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         return torch.maximum(
                 torch.zeros_like(abs_x), abs_x - thresh
             ) * torch.nan_to_num(x / abs_x, nan=0.0)
-     
+
+    def _threshold_hard(self, x, thresh):
+        """Threshold coefficients (hard)
+
+        Args:
+
+            x (torch.Tensor): tensor to operate on
+            thresh (double): Threhsold
+
+        Returns:
+
+            Thresholded version of x
+        """
+        out = x.clone()
+        out[abs(out) < thresh] = 0
+        return out
+
     def dir_op(self, x):
         """Evaluates the forward regularisation operator
 
