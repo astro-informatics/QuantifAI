@@ -92,3 +92,26 @@ def get_hypothesis_test_mask(img_name, physical=True):
             mask_y = [156, 180]           
 
     return mask_x, mask_y
+
+def compute_complex_sigma_noise(observations, input_snr):
+    """Computes the standard deviation of a complex Gaussian noise
+
+    The eff_sigma is such that `Im(n), Re(n) \sim N(0,eff_sigma)`, where
+    eff_sigma=sigma/sqrt(2)
+
+    Args:
+        observations (np.ndarray): complex observations
+        input_snr (float): desired input SNR
+
+    Returns:
+        eff_sigma (float): effective standard deviation for the complex Gaussian noise
+    """
+    num_measurements = observations[observations!=0].shape[0]
+
+    sigma = 10**(-input_snr/20)*(
+        np.linalg.norm(observations.flatten(),ord=2)/np.sqrt(num_measurements)
+    )
+    eff_sigma = sigma / np.sqrt(2)
+
+    return eff_sigma
+
