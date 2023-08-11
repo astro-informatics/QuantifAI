@@ -45,7 +45,7 @@ from convex_reg import utils as utils_cvx_reg
 options = {"tol": 1e-5, "iter": 15000, "update_iter": 4999, "record_iters": False}
 # Save param
 repo_dir = '/disk/xray0/tl3/repos/large-scale-UQ'
-base_savedir = '/disk/xray0/tl3/outputs/large-scale-UQ/new_UQ_results/CRR'
+base_savedir = '/disk/xray99/tl3/proj-convex-UQ/outputs/new_UQ_results/CRR'
 save_dir = base_savedir + '/vars/'
 savefig_dir = base_savedir + '/figs/'
 
