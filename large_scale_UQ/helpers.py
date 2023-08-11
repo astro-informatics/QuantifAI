@@ -64,8 +64,19 @@ def get_hypothesis_test_mask(img_name, physical=True):
     """
     if img_name == 'M31':
         if physical:
+            # Original
             mask_x = [144, 179]
             mask_y = [29, 64]
+            # Left part
+            # mask_x = [125, 176]
+            # mask_y = [29, 70]
+            # mask_x = [115, 176]
+            # mask_y = [29, 80]
+            # Right part
+            # mask_x = [170, 230]
+            # mask_y = [115, 200] 
+            # mask_x = [130, 230]
+            # mask_y = [95, 208] 
         else:
             raise NotImplementedError
 
