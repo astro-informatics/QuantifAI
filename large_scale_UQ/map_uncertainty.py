@@ -62,7 +62,7 @@ def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.05):
     return quantiles, st_dev_down, means_list
 
 
-def bisection_method(function, start_interval, iters, tol):
+def bisection_method(function, start_interval, iters, tol, return_iters=False):
     """Bisection method for locating minima of an abstract function
 
     Args:
@@ -71,6 +71,7 @@ def bisection_method(function, start_interval, iters, tol):
         start_interval (list[int]): Initial lower and upper bounds
         iters (int): Maximum number of bisection iterations
         tol (double): Convergence tolerance of iterations
+        return_iters (bool): return total number of iterations if True.
 
     Returns:
 
@@ -81,28 +82,52 @@ def bisection_method(function, start_interval, iters, tol):
     eta2 = start_interval[1]
     obj3 = function(eta2)
     if np.allclose(eta1, eta2, 1e-12):
-        return eta1
+        if return_iters:
+            return eta1, 0
+        else:
+            return eta1
     if np.sign(function(eta1)) == np.sign(function(eta2)):
         print("[Bisection Method] There is no root in this range.")
         val = np.argmin(np.abs([eta1, eta2]))
-        return [eta1, eta2][val]
+        if return_iters:
+            return [eta1, eta2][val], 2
+        else:
+            return [eta1, eta2][val]
+        
+    iters_cumul = 0
     for i in range(int(iters)):
         obj1 = function(eta1)
         eta3 = (eta2 + eta1) * 0.5
         obj3 = function(eta3)
+        iters_cumul += 2
         if np.abs(eta1 - eta3) / np.abs(eta3) < tol:
             # if np.abs(obj3) < tol:
-            return eta3
+            if return_iters:
+                return eta3, iters_cumul
+            else:
+                return eta3
         if np.sign(obj1) == np.sign(obj3):
             eta1 = eta3
         else:
             eta2 = eta3
     print("Did not converge... ", obj3)
-    return eta3
+    if return_iters:
+        return eta3, iters_cumul
+    else:
+        return eta3
 
 
 def create_local_credible_interval(
-    x_sol, region_size, function, bound, iters, tol, bottom, top, verbose=0.
+    x_sol,
+    region_size,
+    function,
+    bound,
+    iters,
+    tol,
+    bottom,
+    top,
+    verbose=0.,
+    return_iters=False
 ):
     """Bisection method for finding credible intervals
 
@@ -116,10 +141,11 @@ def create_local_credible_interval(
         tol (double): Convergence tolerance of iterations
         bottom (double): lower bound on credible interval (>0)
         top (double): upper bound on credible interval (<0)
+        return_iters (bool): return total number of iterations if True.
 
     Returns:
 
-        Upper limit, lower limit, super-pixel mean
+        Upper limit, lower limit, super-pixel mean, (iters_cumul)
     """
 
     region = np.zeros(x_sol.shape)
@@ -132,6 +158,7 @@ def create_local_credible_interval(
         error_p = np.zeros((dsizey, dsizex))
         error_m = np.zeros((dsizey, dsizex))
         mean = np.zeros((dsizey, dsizex))
+        iters_cumul = 0
         for i in range(dsizey):
             for j in range(dsizex):
                 mask = np.roll(
@@ -148,14 +175,32 @@ def create_local_credible_interval(
                         x_sol * (1.0 - mask) + (x_sum + eta) * mask
                     ) 
 
-                error_p[i, j] = bisection_method(obj, [0, top], iters, tol) + x_sum
+                if return_iters:
+                    error_p[i, j], bisec_iters = bisection_method(
+                        obj, [0, top], iters, tol, return_iters
+                    )
+                    error_p[i, j] += x_sum
+                    iters_cumul += bisec_iters
+                else:
+                    error_p[i, j] = bisection_method(
+                        obj, [0, top], iters, tol, return_iters
+                    ) + x_sum
 
                 def obj(eta):
                     return - bound + function(
                         x_sol * (1.0 - mask) + (x_sum - eta) * mask
                     ) 
 
-                error_m[i, j] = -bisection_method(obj, [0, -bottom], iters, tol) + x_sum
+                if return_iters:
+                    error_m[i, j], bisec_iters = bisection_method(
+                        obj, [0, -bottom], iters, tol, return_iters
+                    )
+                    error_m[i, j] = error_m[i, j]*-1. + x_sum
+                    iters_cumul += bisec_iters
+                else:
+                    error_m[i, j] = -bisection_method(
+                        obj, [0, -bottom], iters, tol, return_iters
+                    ) + x_sum
                 
                 if verbose > 0.:
                     print(
@@ -173,20 +218,32 @@ def create_local_credible_interval(
         error_p = np.zeros((dsizey))
         error_m = np.zeros((dsizey))
         mean = np.zeros((dsizey))
+        iters_cumul = 0
+
         for i in range(dsizey):
             mask = np.roll(region, shift=i * region_size, axis=0)
-            x_sum = np.sum(np.ravel(x_sol[(mask.astype(bool))]))
+            # x_sum = np.sum(np.ravel(x_sol[(mask.astype(bool))]))
+            x_sum = np.mean(np.ravel(x_sol[(mask.astype(bool))]))
             mean[i] = x_sum
 
             def obj(eta):
                 return function(x_sol * (1.0 - mask) + eta * mask) - bound
 
-            error_p[i] = bisection_method(obj, [0, top], iters, tol)
+            if return_iters:
+                error_p[i], bisec_iters = bisection_method(obj, [0, top], iters, tol, return_iters)
+                iters_cumul += bisec_iters
+            else:
+                error_p[i] = bisection_method(obj, [0, top], iters, tol, return_iters)
 
             def obj(eta):
                 return function(x_sol * (1.0 - mask) - eta * mask) - bound
 
-            error_m[i] = -bisection_method(obj, [0, -bottom], iters, tol)
+            if return_iters:
+                error_m[i], bisec_iters = bisection_method(obj, [0, -bottom], iters, tol, return_iters)
+                error_m[i] *= -1.
+                iters_cumul += bisec_iters
+            else:
+                error_m[i] = -bisection_method(obj, [0, -bottom], iters, tol, return_iters)
             
             if verbose > 0.:
                 print(
@@ -197,7 +254,11 @@ def create_local_credible_interval(
                         x_sum,
                     )
                 )
-    return error_p, error_m, mean
+
+    if return_iters:
+        return error_p, error_m, mean, iters_cumul
+    else:
+        return error_p, error_m, mean
 
 
 def create_local_credible_interval_fast(
