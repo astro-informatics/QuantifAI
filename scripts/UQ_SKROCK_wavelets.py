@@ -12,7 +12,7 @@ M1 = False
 if M1:
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 else:
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
+    os.environ["CUDA_VISIBLE_DEVICES"]="2"
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if torch.cuda.is_available():
         print(torch.cuda.is_available())
@@ -31,13 +31,9 @@ from torchmetrics.functional import peak_signal_noise_ratio
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-import scipy.io as sio
-from astropy.io import fits
 import skimage as ski
-
 import large_scale_UQ as luq
 from large_scale_UQ.utils import to_numpy, to_tensor
-from convex_reg import utils as utils_cvx_reg
 
 
 
