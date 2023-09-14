@@ -65,42 +65,51 @@ def get_hypothesis_test_mask(img_name, physical=True):
     if img_name == 'M31':
         if physical:
             # Original
-            mask_x = [144, 179]
-            mask_y = [29, 64]
+            # mask_x = np.array([144, 179])
+            # mask_y = np.array([29, 64])
             # Left part
-            # mask_x = [125, 176]
-            # mask_y = [29, 70]
-            # mask_x = [115, 176]
-            # mask_y = [29, 80]
+            # mask_x = np.array([125, 176])
+            # mask_y = np.array([29, 70])
+            # mask_x = np.array([115, 176])
+            # mask_y = np.array([29, 80])
+            # Big left part
+            # mask_x = np.array([67, 176])
+            # mask_y = np.array([29, 101])
+            # Low part
+            # mask_x = np.array([130, 225])
+            # mask_y = np.array([29, 210])
+            # Smaller low part
+            mask_x = np.array([143, 225])
+            mask_y = np.array([29, 200])
             # Right part
-            # mask_x = [170, 230]
-            # mask_y = [115, 200] 
-            # mask_x = [130, 230]
-            # mask_y = [95, 208] 
+            # mask_x = np.array([170, 230])
+            # mask_y = np.array([115, 200]) 
+            # mask_x = np.array([130, 230])
+            # mask_y = np.array([95, 208]) 
         else:
             raise NotImplementedError
 
     elif img_name == 'CYN':
         if physical:
-            mask_x = [124, 157]
-            mask_y = [219, 256]
+            mask_x = np.array([124, 157])
+            mask_y = np.array([219, 256])
         else:
             raise NotImplementedError
 
     elif img_name == 'W28':
         if physical:
-            mask_x = [87, 119]
-            mask_y = [9, 39]
+            mask_x = np.array([87, 119])
+            mask_y = np.array([9, 39])
         else:
             raise NotImplementedError
 
     elif img_name == '3c288':
         if physical:
-            mask_x = [118, 140]
-            mask_y = [87, 119]
+            mask_x = np.array([118, 140])
+            mask_y = np.array([87, 119])
         else:
-            mask_x = [14, 34]
-            mask_y = [156, 180]           
+            mask_x = np.array([14, 34])
+            mask_y = np.array([156, 180])           
 
     return mask_x, mask_y
 
