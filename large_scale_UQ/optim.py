@@ -7,6 +7,84 @@ from functools import partial
 from large_scale_UQ import empty as Empty
 from large_scale_UQ.operators import L1Norm_torch
 
+def FISTA_CRR_torch(
+        x_init,
+        options=None,
+        likelihood=None,
+        prox_op=None,
+        CRR_model=None,
+        alpha=1.,
+        lmbd=1.,
+        mu=1.,
+    ):
+    """Runs the FISTA optimisation algorithm
+
+    Note that currently this only supports real positive semi-definite
+    fields.
+
+    Args:
+
+        x_init (np.ndarray): First estimate solution
+        options (dict): Python dictionary of optimisation configuration parameters
+        likelihood (Grad Class): Unconstrained data-fidelity class
+        prox_op (Prox Class): Reality constraint
+        alpha (float): optimisation algorithm step-size
+        lmbd (float): regularisation strength
+        mu (float): CRR prior scaling parameter
+    """
+
+    if prox_op is None:
+        prox_op = Empty.EmptyProx()
+    if likelihood is None:
+        likelihood = Empty.EmptyGrad()
+    if CRR_model is None:
+        CRR_model = Empty.EmptyGrad()
+    
+    if options is None:
+        options = {
+            "tol": 1e-5, "iter": 10000, "update_iter": 100, "record_iters": False
+        }
+
+
+    # initialization
+    x_hat = torch.clone(x_init)
+    z = torch.clone(x_init)
+    t = 1
+
+
+    for it in range(options['iter']):
+        x_hat_old = torch.clone(x_hat)
+        x_hat = z - alpha *(
+            likelihood.grad(z) + lmbd * CRR_model.grad(mu * z)
+        )
+        # Reality constraint
+        x_hat = prox_op.prox(x_hat)
+        # Positivity constraint
+        # x = torch.clamp(x, 0, None)
+        
+        t_old = t 
+        t = 0.5 * (1 + math.sqrt(1 + 4*t**2))
+        z = x_hat + (t_old - 1)/t * (x_hat - x_hat_old)
+
+        # relative change of norm for terminating
+        res = (torch.norm(x_hat_old - x_hat)/torch.norm(x_hat_old)).item()
+
+        if res < options['tol']:
+            print("[GD] converged in %d iterations"%(it))
+            break
+
+        if it % options['update_iter'] == 0:
+            print(
+                "[GD] %d out of %d iterations, tol = %f" %(            
+                    it,
+                    options['iter'],
+                    res,
+                )
+            )
+    
+    return x_hat
+
+
 def FB_torch(
         x_init,
         options=None,
