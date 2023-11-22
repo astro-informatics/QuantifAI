@@ -1,0 +1,46 @@
+quantifai
+=========
+
+.. image:: https://img.shields.io/badge/GitHub-quantifai-brightgreen.svg?style=flat
+    :target: https://github.com/astro-informatics/quantifai
+.. image:: https://img.shields.io/badge/License-MIT-blue.svg?style=flat
+    :target: https://github.com/astro-informatics/quantifai/blob/main/LICENSE.txt
+.. image:: https://img.shields.io/badge/arXiv-0000.00000-red.svg?style=flat
+    :target: https://arxiv.org/abs/0000.00000
+
+
+**Python package for scalable Bayesian uncertainty quantification with data-driven priors for radio interferometric imaging in PyTorch**
+
+
+``quantifai`` is a PyTorch-based open source radio interferometric imaging reconstruction package with scalable Bayesian uncertainty quantification relying on data-driven (learned) priors. This was used to produce the results of the paper (`Liaudat et al. 2023 <https://arxiv.org/abs/0000.00000>`_). The ``quantifai`` model relies on the data-driven convex regulariser from the paper (`Goujon et al. 2022 <https://arxiv.org/abs/2211.12461>`_).
+
+
+In this code, we bypass the need of to perform Markov chain Monte Carlo (MCMC) sampling for Bayesian uncertainty quantification and we rely on convex accelerated optimisation algorithms. The ``quantifai`` package also includes MCMC algorithms for posterior sampling as they were used to validate our approach.
+
+
+Basic usage is highlighted in this `interactive demo <https://colab.research.google.com>`_. 
+
+
+
+Attribution
+-----------
+
+Please cite `Liaudat et al. (2023) <https://arxiv.org/abs/0000.00000>`_ if this code package has been of use in your project. 
+
+A BibTeX entry for the paper is:
+
+.. code-block:: 
+
+     @article{harmonic, 
+        author = {Tobías~I.~Liaudat and Matthijs~Mars and Matthew~A.~Price and Marcelo~Pereyra and Marta~M.~Betcke and Jason~D.~McEwen},
+         title = {Scalable Bayesian uncertainty quantification with data-driven priors for radio interferometric imaging},
+       journal = {ArXiv},
+        eprint = {arXiv:0000.00000},
+          year = 2023
+     }
+
+License
+-------
+
+``harmonic`` is released under the MIT license (see `LICENSE.txt <https://github.com/astro-informatics/large-scale-UQ/blob/main/LICENSE.txt>`_).
+
