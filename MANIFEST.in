@@ -1,0 +1,2 @@
+include .pip_readme.rst
+include requirements/requirements-core.txt
