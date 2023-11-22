@@ -1,4 +1,4 @@
-name: convex_uq2
+name: quantifai_env
 channels:
   - pytorch
   - nvidia
