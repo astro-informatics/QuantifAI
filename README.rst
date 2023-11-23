@@ -1,6 +1,6 @@
 .. image:: https://img.shields.io/badge/GitHub-quantifai-brightgreen.svg?style=flat
     :target: https://github.com/astro-informatics/quantifai
-.. image:: https://img.shields.io/badge/License-MIT-blue.svg?style=flat
+.. image:: https://img.shields.io/badge/License-GPL-blue.svg?style=flat
     :target: https://github.com/astro-informatics/quantifai/blob/main/LICENSE.txt
 .. image:: https://img.shields.io/badge/arXiv-0000.00000-red.svg?style=flat
     :target: https://arxiv.org/abs/0000.00000
