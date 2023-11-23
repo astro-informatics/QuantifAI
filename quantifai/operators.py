@@ -1,8 +1,8 @@
 import numpy as np
 import math
 import torch
-from large_scale_UQ.utils import max_eigenval
-from large_scale_UQ.empty import Identity
+from quantifai.utils import max_eigenval
+from quantifai.empty import Identity
 import ptwt
 from functools import partial
 

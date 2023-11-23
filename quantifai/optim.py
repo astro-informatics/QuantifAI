@@ -3,8 +3,8 @@ import time
 import math
 import torch
 from functools import partial
-from large_scale_UQ import empty as Empty
-from large_scale_UQ.operators import L1Norm_torch
+from quantifai import empty as Empty
+from quantifai.operators import L1Norm_torch
 
 
 def FISTA_CRR_torch(
