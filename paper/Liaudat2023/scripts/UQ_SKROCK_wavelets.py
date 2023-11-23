@@ -30,8 +30,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import skimage as ski
-import large_scale_UQ as luq
-from large_scale_UQ.utils import to_numpy, to_tensor
+import quantifai as qai
+from quantifai.utils import to_numpy, to_tensor
 
 
 # %%
@@ -94,7 +94,7 @@ input_snr = 30.0
 for img_name in img_name_list:
     # %%
     # Load image and mask
-    img, mat_mask = luq.helpers.load_imgs(img_name, repo_dir)
+    img, mat_mask = qai.helpers.load_imgs(img_name, repo_dir)
 
     # Aliases
     x = img
@@ -104,14 +104,14 @@ for img_name in img_name_list:
         (1, 1) + img.shape
     )
 
-    phi = luq.operators.MaskedFourier_torch(
+    phi = qai.operators.MaskedFourier_torch(
         shape=img.shape, ratio=0.5, mask=mat_mask, norm="ortho", device=device
     )
 
     y = phi.dir_op(torch_img).detach().cpu().squeeze().numpy()
 
     # Define X Cai noise level
-    eff_sigma = luq.helpers.compute_complex_sigma_noise(y, input_snr)
+    eff_sigma = qai.helpers.compute_complex_sigma_noise(y, input_snr)
     sigma = eff_sigma * np.sqrt(2)
 
     # Generate noise
@@ -129,7 +129,7 @@ for img_name in img_name_list:
 
     # %%
     # Define the likelihood
-    likelihood = luq.operators.L2Norm_torch(
+    likelihood = qai.operators.L2Norm_torch(
         sigma=sigma,
         data=torch_y,
         Phi=phi,
@@ -137,7 +137,7 @@ for img_name in img_name_list:
     # Lipschitz constant computed automatically by likelihood, stored in likelihood.beta
 
     # Define real prox
-    cvx_set_prox_op = luq.operators.RealProx_torch()
+    cvx_set_prox_op = qai.operators.RealProx_torch()
 
     # %%
 
@@ -147,8 +147,8 @@ for img_name in img_name_list:
 
         # Define the wavelet dict
         # Define the l1 norm with dict psi
-        psi = luq.operators.DictionaryWv_torch(wavs_list, levels)
-        reg_prox_op = luq.operators.L1Norm_torch(1.0, psi, op_to_coeffs=True)
+        psi = qai.operators.DictionaryWv_torch(wavs_list, levels)
+        reg_prox_op = qai.operators.L1Norm_torch(1.0, psi, op_to_coeffs=True)
         reg_prox_op.gamma = reg_param
 
         # Compute stepsize
@@ -158,7 +158,7 @@ for img_name in img_name_list:
         print("Threshold: ", reg_prox_op.gamma * alpha)
 
         # Run the optimisation
-        x_hat, diagnostics = luq.optim.FISTA_torch(
+        x_hat, diagnostics = qai.optim.FISTA_torch(
             x_init,
             options=options,
             likelihood=likelihood,
@@ -198,7 +198,7 @@ for img_name in img_name_list:
                         ),
                         2,
                     ),
-                    round(luq.utils.eval_snr(x, images[i]), 2),
+                    round(qai.utils.eval_snr(x, images[i]), 2),
                     round(
                         ssim(
                             ground_truth,
@@ -227,8 +227,8 @@ for img_name in img_name_list:
         loss_fun_torch = lambda _x: likelihood.fun(_x) + fun_prior(_x)
         # Numpy version of the posterior potential
         loss_fun_np = (
-            lambda _x: likelihood.fun(luq.utils.to_tensor(_x, dtype=myType)).item()
-            + fun_prior(luq.utils.to_tensor(_x, dtype=myType)).item()
+            lambda _x: likelihood.fun(qai.utils.to_tensor(_x, dtype=myType)).item()
+            + fun_prior(qai.utils.to_tensor(_x, dtype=myType)).item()
         )
 
         # Compute HPD region bound
@@ -242,7 +242,7 @@ for img_name in img_name_list:
         mean_img_arr = []
         computing_time = []
 
-        x_init_np = luq.utils.to_numpy(x_init)
+        x_init_np = qai.utils.to_numpy(x_init)
 
         # Compute ground truth block
         gt_mean_img_arr = []
@@ -261,7 +261,7 @@ for img_name in img_name_list:
             pr_time_1 = time.process_time()
             wall_time_1 = time.time()
 
-            error_p, error_m, mean = luq.map_uncertainty.create_local_credible_interval(
+            error_p, error_m, mean = qai.map_uncertainty.create_local_credible_interval(
                 x_sol=np_x_hat,
                 region_size=superpix_size,
                 function=loss_fun_np,
@@ -279,9 +279,9 @@ for img_name in img_name_list:
             mean_img_arr.append(np.copy(mean))
             computing_time.append((pr_time_2 - pr_time_1, wall_time_2 - wall_time_1))
             # Clip plot values
-            error_length = luq.utils.clip_matrix(
+            error_length = qai.utils.clip_matrix(
                 np.copy(error_p), clip_low_val, clip_high_val
-            ) - luq.utils.clip_matrix(np.copy(error_m), clip_low_val, clip_high_val)
+            ) - qai.utils.clip_matrix(np.copy(error_m), clip_low_val, clip_high_val)
             # Recover the ground truth mean
             gt_mean = gt_mean_img_arr[it_pixs]
 
@@ -479,7 +479,7 @@ for img_name in img_name_list:
         start_time = time.time()
         for i_x in tqdm(range(maxit)):
             # Update X
-            X = luq.sampling.SKROCK_kernel(
+            X = qai.sampling.SKROCK_kernel(
                 X,
                 Lipschitz_U=L,
                 nStages=nStages,
@@ -490,8 +490,8 @@ for img_name in img_name_list:
 
             if i_x == burnin:
                 # Initialise recording of sample summary statistics after burnin period
-                post_meanvar = luq.utils.welford(X)
-                absfouriercoeff = luq.utils.welford(torch.fft.fft2(X).abs())
+                post_meanvar = qai.utils.welford(X)
+                absfouriercoeff = qai.utils.welford(torch.fft.fft2(X).abs())
             elif i_x > burnin:
                 # update the sample summary statistics
                 post_meanvar.update(X)
@@ -507,7 +507,7 @@ for img_name in img_name_list:
                 )
                 # [TL] Need to use pytorch version of NRMSE!
                 nrmse_values.append(
-                    luq.functions.measures.NRMSE(torch_img, current_mean)
+                    qai.functions.measures.NRMSE(torch_img, current_mean)
                 )
                 logpi_eval.append(logPi(X).item())
 
@@ -525,7 +525,7 @@ for img_name in img_name_list:
 
         # %%
         # Compute the UQ plots
-        quantiles, st_dev_down, means_list = luq.map_uncertainty.compute_UQ(
+        quantiles, st_dev_down, means_list = qai.map_uncertainty.compute_UQ(
             MC_X, superpix_sizes, alpha_prob
         )
 
@@ -602,7 +602,7 @@ for img_name in img_name_list:
 
         # %%
         # Plot sampling results
-        luq.utils.plot_summaries(
+        qai.utils.plot_summaries(
             x_ground_truth=to_numpy(torch_img),
             x_dirty=to_numpy(x_init),
             post_meanvar=post_meanvar,
@@ -656,7 +656,7 @@ for img_name in img_name_list:
         plt.close()
 
         if nLags < n_samples:
-            luq.utils.autocor_plots(
+            qai.utils.autocor_plots(
                 MC_X,
                 current_var,
                 "SKROCK",

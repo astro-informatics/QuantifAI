@@ -36,7 +36,7 @@
 
 import torch
 import numpy as np
-from large_scale_UQ.functions.max_eigenval import max_eigenval
+from quantifai.functions.max_eigenval import max_eigenval
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
