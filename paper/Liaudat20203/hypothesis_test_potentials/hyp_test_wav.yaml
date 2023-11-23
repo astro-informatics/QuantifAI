@@ -1,0 +1,98 @@
+img:  CYN
+Hypothesis test: Blurring
+Threshold: 		 178930.94213924088
+MAP potential: 		 44400.37324094057
+Blurring potential: 	 990177.2407867932
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 178930.94213924088
+MAP potential: 		 44400.37324094057
+	MAP likelihood pot.: 		 673.3927721905694
+	MAP prior pot.: 			 43726.98046875
+	MAP prior/likelihood ratio: 	 64.9353279015821
+Surrogate potential: 	 51393.772649303406
+	Surr. likelihood pot.: 		 7884.139836803409
+	Surr. prior pot.: 			 43509.6328125
+	Surr. prior/likelihood ratio: 	 5.518627740390357
+H0 reject: 		 False
+
+
+img:  M31
+Hypothesis test: Blurring
+Threshold: 		 103919.73405562283
+MAP potential: 		 35938.1565344338
+Blurring potential: 	 196305.8270063713
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 103919.73405562283
+MAP potential: 		 35938.1565344338
+	MAP likelihood pot.: 		 3410.162393808805
+	MAP prior pot.: 			 32527.994140625
+	MAP prior/likelihood ratio: 	 9.538546961775195
+Surrogate potential: 	 133464.635595956
+	Surr. likelihood pot.: 		 104912.74106470599
+	Surr. prior pot.: 			 28551.89453125
+	Surr. prior/likelihood ratio: 	 0.2721489710543387
+H0 reject: 		 True
+
+
+img:  3c288
+Hypothesis test: Blurring
+Threshold: 		 133337.15774224384
+MAP potential: 		 65355.58022105483
+Blurring potential: 	 133120.56209273622
+H0 reject: 		 False
+ 
+Hypothesis test: Inpainting
+Threshold: 		 133337.15774224384
+MAP potential: 		 65355.58022105483
+	MAP likelihood pot.: 		 3749.1427210548304
+	MAP prior pot.: 			 61606.4375
+	MAP prior/likelihood ratio: 	 16.43213984733739
+Surrogate potential: 	 240869.45786768274
+	Surr. likelihood pot.: 		 182828.17661768274
+	Surr. prior pot.: 			 58041.28125
+	Surr. prior/likelihood ratio: 	 0.31746354595753473
+H0 reject: 		 True
+
+
+img:  3c288
+Hypothesis test: Blurring
+Threshold: 		 133337.15774224384
+MAP potential: 		 65355.58022105483
+Blurring potential: 	 133120.56209273622
+H0 reject: 		 False
+ 
+Hypothesis test: Inpainting
+Threshold: 		 133337.15774224384
+MAP potential: 		 65355.58022105483
+	MAP likelihood pot.: 		 3749.1427210548304
+	MAP prior pot.: 			 61606.4375
+	MAP prior/likelihood ratio: 	 16.43213984733739
+Surrogate potential: 	 65417.33655672683
+	Surr. likelihood pot.: 		 3808.8053067268293
+	Surr. prior pot.: 			 61608.53125
+	Surr. prior/likelihood ratio: 	 16.175290225833173
+H0 reject: 		 False
+
+
+img:  W28
+Hypothesis test: Blurring
+Threshold: 		 96373.57664983548
+MAP potential: 		 28391.999128646443
+Blurring potential: 	 844413.0678885636
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 96373.57664983548
+MAP potential: 		 28391.999128646443
+	MAP likelihood pot.: 		 1073.3838942714424
+	MAP prior pot.: 			 27318.615234375
+	MAP prior/likelihood ratio: 	 25.450927091576556
+Surrogate potential: 	 520386.36843392253
+	Surr. likelihood pot.: 		 496241.17116829753
+	Surr. prior pot.: 			 24145.197265625
+	Surr. prior/likelihood ratio: 	 0.048656174998096414
+H0 reject: 		 True

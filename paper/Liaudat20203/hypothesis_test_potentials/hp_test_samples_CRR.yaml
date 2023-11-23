@@ -1,0 +1,82 @@
+Sample-based hypothesis test for CRR reg
+
+Need to update the M31 region
+
+img:  CYN
+Hypothesis test: Blurring
+Threshold: 		 145029.31792173782
+Threshold(samples): 		 84771.47109375
+MMSE potential: 		 12532.802734375
+Blurring potential: 	 964157.875
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 145029.31792173782
+Threshold(samples): 		 84771.47109375
+MMSE potential: 		 12532.802734375
+Surrogate potential: 	 18197.3984375
+H0 reject: 		 False
+
+
+img:  M31
+Hypothesis test: Blurring
+Threshold: 		 98991.88416181403
+Threshold(samples): 		 74248.54484375
+MMSE potential: 		 33950.5234375
+Blurring potential: 	 190539.984375
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 98991.88416181403
+Threshold(samples): 		 74248.54484375
+MMSE potential: 		 33950.5234375
+Surrogate potential: 	 115857.78125
+H0 reject: 		 True
+
+
+img:  3c288
+Hypothesis test: Blurring
+Threshold: 		 90839.30017743903
+Threshold(samples): 		 65872.4159375
+MMSE potential: 		 25658.501953125
+Blurring potential: 	 92047.96875
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 90839.30017743903
+Threshold(samples): 		 65872.4159375
+MMSE potential: 		 25658.501953125
+Surrogate potential: 	 191765.96875
+H0 reject: 		 True
+
+
+img:  3c288
+Hypothesis test: Blurring
+Threshold: 		 90839.30017743903
+Threshold(samples): 		 65872.4159375
+MMSE potential: 		 25658.501953125
+Blurring potential: 	 92047.96875
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 90839.30017743903
+Threshold(samples): 		 65872.4159375
+MMSE potential: 		 25658.501953125
+Surrogate potential: 	 25702.982421875
+H0 reject: 		 False
+
+
+img:  W28
+Hypothesis test: Blurring
+Threshold: 		 87574.92908368903
+Threshold(samples): 		 61158.92171875
+MMSE potential: 		 22151.998046875
+Blurring potential: 	 838725.4375
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 87574.92908368903
+Threshold(samples): 		 61158.92171875
+MMSE potential: 		 22151.998046875
+Surrogate potential: 	 464876.25
+H0 reject: 		 True

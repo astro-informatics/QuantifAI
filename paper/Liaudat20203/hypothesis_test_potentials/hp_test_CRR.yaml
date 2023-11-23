@@ -1,0 +1,104 @@
+MAP-based hypothesis test for CRR reg
+
+img:  CYN
+Hypothesis test: Blurring
+Threshold: 		 145029.31792173782
+MAP potential: 		 10498.7490234375
+Blurring potential: 	 964296.75
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 145029.31792173782
+MAP potential: 		 10498.7490234375
+	MAP likelihood pot.: 		 1679.9654541015625
+	MAP prior pot.: 			 8818.783203125
+	MAP prior/likelihood ratio: 	 5.249383659404617
+Surrogate potential: 	 16933.81640625
+	Surr. likelihood pot.: 		 8350.431640625
+	Surr. prior pot.: 			 8583.3857421875
+	Surr. prior/likelihood ratio: 	 1.0278972526916064
+H0 reject: 		 False
+
+
+img:  M31
+Hypothesis test: Blurring
+Threshold: 		 98991.88416181403
+MAP potential: 		 31010.306640625
+Blurring potential: 	 190588.4375
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 98991.88416181403
+MAP potential: 		 31010.306640625
+	MAP likelihood pot.: 		 4259.15576171875
+	MAP prior pot.: 			 26751.150390625
+	MAP prior/likelihood ratio: 	 6.28085749553094
+Surrogate potential: 	 116101.15625
+	Surr. likelihood pot.: 		 92111.6015625
+	Surr. prior pot.: 			 23989.552734375
+	Surr. prior/likelihood ratio: 	 0.2604400784204962
+H0 reject: 		 True
+
+
+img:  3c288
+Hypothesis test: Blurring
+Threshold: 		 90839.30017743903
+MAP potential: 		 22857.72265625
+Blurring potential: 	 92210.640625
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 90839.30017743903
+MAP potential: 		 22857.72265625
+	MAP likelihood pot.: 		 6076.30078125
+	MAP prior pot.: 			 16781.421875
+	MAP prior/likelihood ratio: 	 2.761782617276522
+Surrogate potential: 	 190809.96875
+	Surr. likelihood pot.: 		 177451.703125
+	Surr. prior pot.: 			 13358.26171875
+	Surr. prior/likelihood ratio: 	 0.07527829535307538
+H0 reject: 		 True
+
+
+img:  3c288
+Hypothesis test: Blurring
+Threshold: 		 90839.30017743903
+MAP potential: 		 22857.72265625
+Blurring potential: 	 92210.640625
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 90839.30017743903
+MAP potential: 		 22857.72265625
+	MAP likelihood pot.: 		 6076.30078125
+	MAP prior pot.: 			 16781.421875
+	MAP prior/likelihood ratio: 	 2.761782617276522
+Surrogate potential: 	 22890.494140625
+	Surr. likelihood pot.: 		 6128.86474609375
+	Surr. prior pot.: 			 16761.62890625
+	Surr. prior/likelihood ratio: 	 2.7348668310771704
+H0 reject: 		 False
+
+
+img:  W28
+Hypothesis test: Blurring
+Threshold: 		 87574.92908368903
+MAP potential: 		 19593.3515625
+Blurring potential: 	 838688.8125
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 87574.92908368903
+MAP potential: 		 19593.3515625
+	MAP likelihood pot.: 		 2239.9326171875
+	MAP prior pot.: 			 17353.419921875
+	MAP prior/likelihood ratio: 	 7.74729551626614
+Surrogate potential: 	 469933.09375
+	Surr. likelihood pot.: 		 455177.34375
+	Surr. prior pot.: 			 14755.7353515625
+	Surr. prior/likelihood ratio: 	 0.03241755231048338
+H0 reject: 		 True
+
+
+
+

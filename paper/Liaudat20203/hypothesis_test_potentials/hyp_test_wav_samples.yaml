@@ -1,0 +1,78 @@
+img:  CYN
+Hypothesis test: Blurring
+Threshold: 		 178930.94213924088
+Threshold(samples): 		 163918.8188715667
+MMSE potential: 		 48006.17262601538
+Blurring potential: 	 988767.5389037903
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 178930.94213924088
+Threshold(samples): 		 163918.8188715667
+MMSE potential: 		 48006.17262601538
+Surrogate potential: 	 53289.802655385065
+H0 reject: 		 False
+
+
+img:  M31
+Hypothesis test: Blurring
+Threshold: 		 103919.73405562283
+Threshold(samples): 		 110469.08802032971
+MMSE potential: 		 44765.53688217216
+Blurring potential: 	 196883.98805361497
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 103919.73405562283
+Threshold(samples): 		 110469.08802032971
+MMSE potential: 		 44765.53688217216
+Surrogate potential: 	 139613.64907228903
+H0 reject: 		 True
+
+
+img:  3c288
+Hypothesis test: Blurring
+Threshold: 		 133337.15774224384
+Threshold(samples): 		 139771.89596704868
+MMSE potential: 		 72880.8969549931
+Blurring potential: 	 133113.11835227418
+H0 reject: 		 False
+ 
+Hypothesis test: Inpainting
+Threshold: 		 133337.15774224384
+Threshold(samples): 		 139771.89596704868
+MMSE potential: 		 72880.8969549931
+Surrogate potential: 	 248653.08659178956
+H0 reject: 		 True
+
+
+img:  3c288
+Hypothesis test: Blurring
+Threshold: 		 133337.15774224384
+Threshold(samples): 		 139771.89596704868
+MMSE potential: 		 72880.8969549931
+Blurring potential: 	 133113.11835227418
+H0 reject: 		 False
+ 
+Hypothesis test: Inpainting
+Threshold: 		 133337.15774224384
+Threshold(samples): 		 139771.89596704868
+MMSE potential: 		 72880.8969549931
+Surrogate potential: 	 72908.70694325722
+H0 reject: 		 False
+
+
+img:  W28
+Hypothesis test: Blurring
+Threshold: 		 96373.57664983548
+Threshold(samples): 		 87928.77919708495
+MMSE potential: 		 35269.05235666977
+Blurring potential: 	 844561.1009329314
+H0 reject: 		 True
+ 
+Hypothesis test: Inpainting
+Threshold: 		 96373.57664983548
+Threshold(samples): 		 87928.77919708495
+MMSE potential: 		 35269.05235666977
+Surrogate potential: 	 519042.67231963255
+H0 reject: 		 True
