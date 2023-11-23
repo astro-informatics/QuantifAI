@@ -198,9 +198,9 @@ def FB_torch(
 def FISTA_torch(
         x_init,
         options=None,
-        g=None,
-        f=None,
-        h=None,
+        likelihood=None,
+        cvx_set_prox_op=None,
+        reg_prox_op=None,
         alpha=1,
         tau=1,
         viewer=None
@@ -214,19 +214,19 @@ def FISTA_torch(
 
         x_init (np.ndarray): First estimate solution
         options (dict): Python dictionary of optimisation configuration parameters
-        g (Grad Class): Unconstrained data-fidelity class
-        f (Prox Class): Reality constraint
-        h (Prox/AI Class): Proximal or Learnt regularisation constraint
+        likelihood (Grad Class): Unconstrained data-fidelity class
+        cvx_set_prox_op (Prox Class): Reality constraint
+        reg_prox_op (Prox Class): Proximal regularisation constraint
         alpha (float): regularisation paremeter / step-size.
         tau (float): custom weighting of proximal operator
         viewer (function): Plotting function for real-time viewing (must accept: x, iteration)
     """
-    if f is None:
-        f = Empty.EmptyProx()
-    if g is None:
-        g = Empty.EmptyGrad()
-    if h is None:
-        h = Empty.EmptyProx()
+    if cvx_set_prox_op is None:
+        cvx_set_prox_op = Empty.EmptyProx()
+    if likelihood is None:
+        likelihood = Empty.EmptyGrad()
+    if reg_prox_op is None:
+        reg_prox_op = Empty.EmptyProx()
 
     if options is None:
         options = {"tol": 1e-4, "iter": 500, "update_iter": 100, "record_iters": False}
@@ -249,9 +249,9 @@ def FISTA_torch(
     # Set subtraction operation
     _op_sub = lambda _x1, _x2 : _x1 - _x2
 
-    if isinstance(h, L1Norm_torch):
-        if h.num_wavs > 0:
-            op_sub = partial(h._op_to_two_coeffs, op=_op_sub)
+    if isinstance(reg_prox_op, L1Norm_torch):
+        if reg_prox_op.num_wavs > 0:
+            op_sub = partial(reg_prox_op._op_to_two_coeffs, op=_op_sub)
     else: 
         op_sub = _op_sub
 
@@ -261,12 +261,12 @@ def FISTA_torch(
         t = time.time()
         # forward step
         x_old = torch.clone(x)
-        x = f.prox(z - alpha * g.grad(z), tau)
+        x = cvx_set_prox_op.prox(z - alpha * likelihood.grad(z), tau)
 
         # backward step
-        u = h.dir_op(x)
-        u2 = h.dir_op(torch.clone(x))
-        x = x + h.adj_op(op_sub(h.prox(u, tau), u2))
+        u = reg_prox_op.dir_op(x)
+        u2 = reg_prox_op.dir_op(torch.clone(x))
+        x = x + reg_prox_op.adj_op(op_sub(reg_prox_op.prox(u, tau), u2))
 
         # FISTA acceleration steps
         a_old = a
@@ -276,7 +276,9 @@ def FISTA_torch(
         # time and criterion
         if record_iters:
             timing[it] = time.time() - t
-            criter[it] = f.fun(x) + g.fun(x) + h.fun(h.dir_op(x))
+            criter[it] = cvx_set_prox_op.fun(x) + likelihood.fun(x) + reg_prox_op.fun(
+                reg_prox_op.dir_op(x)
+            )
 
         if torch.allclose(x, torch.tensor(0., dtype=x.dtype)):
             x = x_old
