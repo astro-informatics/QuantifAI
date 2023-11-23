@@ -1,4 +1,3 @@
-
 import numpy as np
 import scipy.io as sio
 from astropy.io import fits
@@ -7,7 +6,7 @@ from skimage import transform
 
 def load_imgs(img_name, repo_dir):
     """Load radio images.
-    
+
     Load radio image and the corresponding Fourier mask.
     The preprocessing follows X. Cai's implementation used for his article.
 
@@ -20,7 +19,7 @@ def load_imgs(img_name, repo_dir):
         mat_mask (np.ndarray): Fourier mask
     """
     # Load img
-    img_path = repo_dir + '/data/imgs/{:s}.fits'.format(img_name)
+    img_path = repo_dir + "/data/imgs/{:s}.fits".format(img_name)
     img_data = fits.open(img_path, memmap=False)
 
     # Loading the image and cast it to float
@@ -28,11 +27,11 @@ def load_imgs(img_name, repo_dir):
     # Flipping data
     img = np.flipud(img)
 
-    # Resize image 
-    if img_name == 'CYN':
+    # Resize image
+    if img_name == "CYN":
         img = transform.resize(img, [256, 512], order=3, anti_aliasing=True)
 
-    if img_name == 'W28' or img_name == '3c288':
+    if img_name == "W28" or img_name == "3c288":
         img = transform.resize(img, [256, 256], order=3, anti_aliasing=True)
 
     # Normalise
@@ -41,13 +40,14 @@ def load_imgs(img_name, repo_dir):
 
     # Load op from X Cai
     op_mask = sio.loadmat(
-        repo_dir + '/data/operators_masks/' + img_name + '_fourier_mask.mat'
-    )['Ma']
+        repo_dir + "/data/operators_masks/" + img_name + "_fourier_mask.mat"
+    )["Ma"]
 
     # Matlab's reshape works with 'F'-like ordering
-    mat_mask = np.reshape(np.sum(op_mask, axis=0), img.shape, order='F').astype(bool)
+    mat_mask = np.reshape(np.sum(op_mask, axis=0), img.shape, order="F").astype(bool)
 
     return img, mat_mask
+
 
 def get_hypothesis_test_mask(img_name, physical=True):
     """Load hypothesis test masks.
@@ -62,36 +62,37 @@ def get_hypothesis_test_mask(img_name, physical=True):
         mask_x (list): mask's x coordinates
         mask_y (list): mask's y coordinates
     """
-    if img_name == 'M31':
+    if img_name == "M31":
         if physical:
             mask_x = np.array([143, 225])
             mask_y = np.array([29, 200])
         else:
             raise NotImplementedError
 
-    elif img_name == 'CYN':
+    elif img_name == "CYN":
         if physical:
             mask_x = np.array([124, 157])
             mask_y = np.array([219, 256])
         else:
             raise NotImplementedError
 
-    elif img_name == 'W28':
+    elif img_name == "W28":
         if physical:
             mask_x = np.array([87, 119])
             mask_y = np.array([9, 39])
         else:
             raise NotImplementedError
 
-    elif img_name == '3c288':
+    elif img_name == "3c288":
         if physical:
             mask_x = np.array([118, 140])
             mask_y = np.array([87, 119])
         else:
             mask_x = np.array([14, 34])
-            mask_y = np.array([156, 180])           
+            mask_y = np.array([156, 180])
 
     return mask_x, mask_y
+
 
 def compute_complex_sigma_noise(observations, input_snr):
     """Computes the standard deviation of a complex Gaussian noise
@@ -106,12 +107,11 @@ def compute_complex_sigma_noise(observations, input_snr):
     Returns:
         eff_sigma (float): effective standard deviation for the complex Gaussian noise
     """
-    num_measurements = observations[observations!=0].shape[0]
+    num_measurements = observations[observations != 0].shape[0]
 
-    sigma = 10**(-input_snr/20)*(
-        np.linalg.norm(observations.flatten(),ord=2)/np.sqrt(num_measurements)
+    sigma = 10 ** (-input_snr / 20) * (
+        np.linalg.norm(observations.flatten(), ord=2) / np.sqrt(num_measurements)
     )
     eff_sigma = sigma / np.sqrt(2)
 
     return eff_sigma
-

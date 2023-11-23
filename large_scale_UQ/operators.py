@@ -1,4 +1,3 @@
-
 import numpy as np
 import math
 import torch
@@ -14,14 +13,8 @@ class MaskedFourier:
     """
 
     def __init__(
-            self,
-            dim,
-            ratio=0.5,
-            mask=None,
-            norm=None,
-            framework='numpy',
-            device='cpu'
-        ):
+        self, dim, ratio=0.5, mask=None, norm=None, framework="numpy", device="cpu"
+    ):
         """Initialises the masked fourier sensing operator.
 
         Args:
@@ -43,37 +36,36 @@ class MaskedFourier:
             mask[: int(ratio * dim**2)] = True
             np.random.shuffle(mask)
             self.mask = mask.reshape(self.shape)
-        if self.framework == 'pytorch':
-            self.mask = torch.tensor(
-                np.copy(mask), device=device
-            ).reshape((1,1) + self.shape)
+        if self.framework == "pytorch":
+            self.mask = torch.tensor(np.copy(mask), device=device).reshape(
+                (1, 1) + self.shape
+            )
 
-        if self.framework == 'numpy':
+        if self.framework == "numpy":
             self.dir_op = self._numpy_dir_op
             self.adj_op = self._numpy_adj_op
-        elif self.framework == 'pytorch':
+        elif self.framework == "pytorch":
             self.dir_op = self._torch_dir_op
             self.adj_op = self._torch_adj_op
-
 
     def set_mask(self, new_mask):
         """Set new mask taking care of the framework."""
         if isinstance(new_mask, np.ndarray):
-            if self.framework == 'numpy':
+            if self.framework == "numpy":
                 self.mask = new_mask
-            elif self.framework == 'pytorch':
-                self.mask = torch.tensor(
-                    np.copy(new_mask), device=self.device
-                ).reshape((1,1) + new_mask.shape)
+            elif self.framework == "pytorch":
+                self.mask = torch.tensor(np.copy(new_mask), device=self.device).reshape(
+                    (1, 1) + new_mask.shape
+                )
         elif isinstance(new_mask, torch.Tensor):
-            if self.framework == 'numpy':
+            if self.framework == "numpy":
                 self.mask = new_mask.detach().cpu().squeeze().numpy()
-            elif self.framework == 'pytorch':
+            elif self.framework == "pytorch":
                 self.mask = new_mask
 
     def _torch_dir_op(self, x):
         """Computes the forward operator of the class.
-        
+
         Compute FFT and then mask Fourier coefficients.
         Using the `pytorch` framework.
 
@@ -84,16 +76,13 @@ class MaskedFourier:
             torch.Tensor: tensor of Fourier coefficients. Same shape as input.
         """
 
-        return torch.mul(
-            torch.fft.fft2(x, norm=self.norm),
-            self.mask
-        )
-    
+        return torch.mul(torch.fft.fft2(x, norm=self.norm), self.mask)
+
     def _torch_adj_op(self, x):
         """Computes the forward adjoint operator of the class.
 
         Compute the inverse FFT.
-        
+
         Args:
             x (torch.Tensor): tensor of Fourier coefficients. Same shape as output.
 
@@ -102,7 +91,6 @@ class MaskedFourier:
         """
 
         return torch.fft.ifft2(x, norm=self.norm)
-
 
     def _numpy_dir_op(self, x):
         """Computes the forward operator of the class.
@@ -167,12 +155,12 @@ class MaskedFourier_numpy:
     """
 
     def __init__(
-            self,
-            dim,
-            ratio=0.5,
-            mask=None,
-            norm=None,
-        ):
+        self,
+        dim,
+        ratio=0.5,
+        mask=None,
+        norm=None,
+    ):
         """Initialises the masked fourier sensing operator.
 
         Args:
@@ -191,10 +179,9 @@ class MaskedFourier_numpy:
             np.random.shuffle(mask)
             self.mask = mask.reshape(self.shape)
 
-        # Set the operations for the numpy framework 
+        # Set the operations for the numpy framework
         self.dir_op = self._numpy_dir_op
         self.adj_op = self._numpy_adj_op
-
 
     def set_mask(self, new_mask):
         """Set new mask taking care of the framework."""
@@ -265,14 +252,7 @@ class MaskedFourier_torch(torch.nn.Module):
     Masked fourier sensing operator i.e. MRI/Radio imaging.
     """
 
-    def __init__(
-            self,
-            shape,
-            ratio=0.5,
-            mask=None,
-            norm=None,
-            device='cpu'
-        ):
+    def __init__(self, shape, ratio=0.5, mask=None, norm=None, device="cpu"):
         """Initialises the masked fourier sensing operator.
 
         Args:
@@ -290,7 +270,7 @@ class MaskedFourier_torch(torch.nn.Module):
         elif len(shape) == 2:
             self.shape = shape
         else:
-            raise ValueError('Shape should be an int or array (or tuple) of length 2.')
+            raise ValueError("Shape should be an int or array (or tuple) of length 2.")
         self.mask = mask
         # If the mask is not defined, initialise a random one
         if mask is None:
@@ -298,7 +278,7 @@ class MaskedFourier_torch(torch.nn.Module):
         else:
             # Check the channel dimensions for the pytorch framework
             if self.mask.shape != (1, 1, self.shape[0], self.shape[1]):
-                self.mask.reshape((1,1) + self.shape)
+                self.mask.reshape((1, 1) + self.shape)
             # Set init mask
             self.set_mask(self.mask)
         # Set the operations from the torch framework
@@ -316,20 +296,20 @@ class MaskedFourier_torch(torch.nn.Module):
         np.random.shuffle(mask)
         self.mask = torch.tensor(
             np.copy(mask.reshape(self.shape)), device=self.device
-        ).reshape((1,1) + self.shape)
+        ).reshape((1, 1) + self.shape)
 
     def set_mask(self, new_mask):
         """Set new mask."""
         if isinstance(new_mask, np.ndarray):
-            self.mask = torch.tensor(
-                np.copy(new_mask), device=self.device
-            ).reshape((1,1) + self.shape)
+            self.mask = torch.tensor(np.copy(new_mask), device=self.device).reshape(
+                (1, 1) + self.shape
+            )
         elif isinstance(new_mask, torch.Tensor):
-                self.mask = new_mask.reshape((1,1) + self.shape)
+            self.mask = new_mask.reshape((1, 1) + self.shape)
 
     def _torch_dir_op(self, x):
         """Computes the forward operator of the class.
-        
+
         Compute FFT and then mask Fourier coefficients.
         Using the `pytorch` framework.
 
@@ -340,16 +320,13 @@ class MaskedFourier_torch(torch.nn.Module):
             torch.Tensor: tensor of Fourier coefficients. Same shape as input.
         """
 
-        return torch.mul(
-            torch.fft.fft2(x, norm=self.norm),
-            self.mask
-        )
-    
+        return torch.mul(torch.fft.fft2(x, norm=self.norm), self.mask)
+
     def _torch_adj_op(self, x):
         """Computes the forward adjoint operator of the class.
 
         Compute the inverse FFT.
-        
+
         Args:
             x (torch.Tensor): tensor of Fourier coefficients. Same shape as output.
 
@@ -358,7 +335,7 @@ class MaskedFourier_torch(torch.nn.Module):
         """
 
         return torch.fft.ifft2(x, norm=self.norm)
-    
+
 
 class L2Norm_torch(torch.nn.Module):
     """This class computes the gradient operator of the l2 norm function.
@@ -391,7 +368,7 @@ class L2Norm_torch(torch.nn.Module):
         if Phi is None:
             self.Phi = Identity()
             # Compute Lipschitz constant
-            self.beta = 1. / sigma ** 2
+            self.beta = 1.0 / sigma**2
         else:
             self.Phi = Phi
             self._compute_lip_constant()
@@ -404,8 +381,8 @@ class L2Norm_torch(torch.nn.Module):
 
     def _compute_lip_constant(self):
         """Compute Lipschitz constant."""
-        A = lambda _x : self.Phi.dir_op(_x)
-        At = lambda _x : self.Phi.adj_op(_x)
+        A = lambda _x: self.Phi.dir_op(_x)
+        At = lambda _x: self.Phi.adj_op(_x)
 
         max_val = max_eigenval(
             A=A,
@@ -414,11 +391,10 @@ class L2Norm_torch(torch.nn.Module):
             tol=1e-4,
             max_iter=int(1e4),
             verbose=0,
-            device=self.data.device
+            device=self.data.device,
         )
         # Store Lipschitz constant
-        self.beta = max_val.item() / self.sigma ** 2
-
+        self.beta = max_val.item() / self.sigma**2
 
     def grad(self, x, sigma=None, sigma2=None):
         """Gradient of the l2_norm class with respect to the data
@@ -440,10 +416,8 @@ class L2Norm_torch(torch.nn.Module):
             else:
                 sigma = math.sqrt(sigma2)
 
-        return - self.Phi.adj_op((self.data - self.Phi.dir_op(x))) / (
-            sigma ** 2
-        )
-    
+        return -self.Phi.adj_op((self.data - self.Phi.dir_op(x))) / (sigma**2)
+
     def grad_sigma(self, x, sigma=None):
         """Gradient of the l2_norm class with respect to sigma
 
@@ -459,8 +433,8 @@ class L2Norm_torch(torch.nn.Module):
         """
         if sigma is None:
             sigma = self.sigma
-        return - torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
-            sigma ** 3
+        return -torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
+            sigma**3
         )
 
     def grad_sigma2(self, x, sigma2=None):
@@ -478,8 +452,8 @@ class L2Norm_torch(torch.nn.Module):
         """
         if sigma2 is None:
             sigma2 = self.sigma**2
-        return - torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
-            2* sigma2**2
+        return -torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
+            2 * sigma2**2
         )
 
     def fun(self, x, sigma=None, sigma2=None):
@@ -501,9 +475,9 @@ class L2Norm_torch(torch.nn.Module):
                 sigma = self.sigma
             else:
                 sigma = math.sqrt(sigma2)
-        
+
         return torch.sum(torch.abs(self.data - self.Phi.dir_op(x)) ** 2.0) / (
-            2 * sigma ** 2
+            2 * sigma**2
         )
 
 
@@ -512,7 +486,7 @@ class Wavelets_torch(torch.nn.Module):
     Constructs a linear operator for abstract Daubechies Wavelets
     """
 
-    def __init__(self, wav, levels, mode='periodic'):
+    def __init__(self, wav, levels, mode="periodic"):
         """Initialises Daubechies Wavelet linear operator class
 
         Args:
@@ -543,12 +517,12 @@ class Wavelets_torch(torch.nn.Module):
 
         Args:
 
-            x (torch.Tensor): Array to wavelet transform. Can be [batch, H, W] or [H, W], 
+            x (torch.Tensor): Array to wavelet transform. Can be [batch, H, W] or [H, W],
                 but it will raise an error if used with [batch, channels, H, W].
 
         Returns:
 
-            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]): 
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
                 Wavelet decomposition coefficients
 
         Raises:
@@ -560,9 +534,7 @@ class Wavelets_torch(torch.nn.Module):
                 x.squeeze(1), wavelet=self.wav, level=self.levels, mode=self.mode
             )
         else:
-            return ptwt.wavedec2(
-                x, wavelet=self.wav, level=self.levels, mode=self.mode
-            )
+            return ptwt.wavedec2(x, wavelet=self.wav, level=self.levels, mode=self.mode)
 
     def adj_op(self, coeffs):
         """Evaluates the forward adjoint abstract wavelet transform of x
@@ -583,7 +555,8 @@ class DictionaryWv_torch(torch.nn.Module):
     """
     Constructs class to permit sparsity averaging across a collection of wavelet dictionaries
     """
-    def __init__(self, wavs, levels, mode='periodic'):
+
+    def __init__(self, wavs, levels, mode="periodic"):
         """Initialises a linear operator for a collection of abstract wavelet dictionaries
 
         Args:
@@ -605,7 +578,9 @@ class DictionaryWv_torch(torch.nn.Module):
         if np.isscalar(levels):
             self.levels = np.ones(len(self.wavs)) * levels
         for i in range(len(self.wavs)):
-            self.wavelet_list.append(Wavelets_torch(self.wavs[i], self.levels[i], self.mode))
+            self.wavelet_list.append(
+                Wavelets_torch(self.wavs[i], self.levels[i], self.mode)
+            )
 
     def dir_op(self, x):
         """Evaluates a list of forward abstract wavelet transforms of x
@@ -633,7 +608,7 @@ class DictionaryWv_torch(torch.nn.Module):
         out = self.wavelet_list[0].adj_op(coeffs[0])
         for wav_i in range(1, len(self.wavelet_list)):
             out = out + self.wavelet_list[wav_i].adj_op(coeffs[wav_i])
-        return out  / len(self.wavelet_list)
+        return out / len(self.wavelet_list)
 
 
 class L1Norm_torch(torch.nn.Module):
@@ -679,23 +654,18 @@ class L1Norm_torch(torch.nn.Module):
             self.prox = self._prox
             self.fun = self._fun
 
-
     def _apply_op_to_coeffs(self, coeffs, op):
-        """Applies operation to all coefficients in ptwt structure.
-        
-        """
+        """Applies operation to all coefficients in ptwt structure."""
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
             # Apply op over the low freq approx
             coeffs[wav_i][0] = op(coeffs[wav_i][0])
             # Iterate over the wavelet decomp and apply op
             for it1 in range(1, len(coeffs[0])):
-                coeffs[wav_i][it1] = tuple([op(elem) for elem in  coeffs[wav_i][it1]])
+                coeffs[wav_i][it1] = tuple([op(elem) for elem in coeffs[wav_i][it1]])
 
         return coeffs
-    
-    
-    
+
     def _op_to_two_coeffs(self, coeffs1, coeffs2, op):
         """Applies operation to two set of coefficients in ptwt structure.
 
@@ -708,10 +678,10 @@ class L1Norm_torch(torch.nn.Module):
             coeffs2 (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
                 Second set of wavelet coefficients
             op (function): Operation to apply
-        
+
         Returns:
 
-            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]): 
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
                 Resulting coefficients
         """
         # Iterate over the wavelet dictionaries
@@ -721,9 +691,12 @@ class L1Norm_torch(torch.nn.Module):
             # Iterate over the wavelet decomp and apply op
             for it1 in range(1, len(coeffs1[0])):
                 coeffs1[wav_i][it1] = tuple(
-                    [op(elem1, elem2) for elem1, elem2 in zip(
-                        coeffs1[wav_i][it1], coeffs2[wav_i][it1]
-                    )]
+                    [
+                        op(elem1, elem2)
+                        for elem1, elem2 in zip(
+                            coeffs1[wav_i][it1], coeffs2[wav_i][it1]
+                        )
+                    ]
                 )
         return coeffs1
 
@@ -750,8 +723,7 @@ class L1Norm_torch(torch.nn.Module):
                     max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
 
         # Apply operation to the coefficients
-        return torch.max(torch.tensor(max_val)).item()    
-
+        return torch.max(torch.tensor(max_val)).item()
 
     def _prox_coeffs(self, x, tau):
         """Evaluates the l1-norm prox of Psi x
@@ -770,7 +742,7 @@ class L1Norm_torch(torch.nn.Module):
         op = lambda _x: self._prox(_x, tau=tau)
         # Apply operation to the coefficients
         return self._apply_op_to_coeffs(x, op)
-    
+
     def _fun_coeffs(self, coeffs):
         """Evaluates loss of l1-norm regularisation for coeffs
 
@@ -811,16 +783,14 @@ class L1Norm_torch(torch.nn.Module):
         # Replaced the use of torch.sign() to add complex value support
         abs_x = torch.abs(x)
         return torch.maximum(
-                torch.zeros_like(abs_x), abs_x - self.gamma * tau
-            ) * torch.nan_to_num(x / abs_x, nan=0.0)
- 
+            torch.zeros_like(abs_x), abs_x - self.gamma * tau
+        ) * torch.nan_to_num(x / abs_x, nan=0.0)
+
         # return torch.maximum(
         #         torch.zeros_like(x), torch.abs(x) - self.gamma * tau
         #     ) * torch.exp(
         #         torch.complex(torch.tensor(0.), torch.tensor(1.)) * torch.angle(x)
         #     )
-
-
 
     def _fun(self, x):
         """Evaluates loss of functional term of l1-norm regularisation
@@ -877,7 +847,7 @@ class RealProx_torch(torch.nn.Module):
         super().__init__()
         self.beta = 1.0
 
-    def prox(self, x, tau=1.):
+    def prox(self, x, tau=1.0):
         """Evaluates the real half-plane projection of x
 
         Args:
@@ -931,9 +901,7 @@ class RealProx_torch(torch.nn.Module):
 
 
 class Operation2WaveletCoeffs_torch(torch.nn.Module):
-    """This class helps to apply operations to wavelet coefficients.
-
-    """
+    """This class helps to apply operations to wavelet coefficients."""
 
     def __init__(self, Psi=None):
         """Initialise
@@ -962,26 +930,23 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
             # Set the number of wavelets scales
             self.levels = self.Psi.levels
 
-
     def _apply_op_to_coeffs(self, coeffs, op):
-        """Applies operation to all coefficients in ptwt structure.
-        
-        """
+        """Applies operation to all coefficients in ptwt structure."""
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
             # Apply op over the low freq approx
             coeffs[wav_i][0] = op(coeffs[wav_i][0])
             # Iterate over the wavelet decomp and apply op
             for it1 in range(1, len(coeffs[0])):
-                coeffs[wav_i][it1] = tuple([op(elem) for elem in  coeffs[wav_i][it1]])
+                coeffs[wav_i][it1] = tuple([op(elem) for elem in coeffs[wav_i][it1]])
 
         return coeffs
 
     def _apply_op_to_coeffs_at_level(self, coeffs, level, op):
         """Applies operation to all coefficients at a given level in ptwt structure.
-        
-            level (int or None): Level of wavelet decomposition to apply the operation.
-                If the level is None, the operation is applied to all existing levels.
+
+        level (int or None): Level of wavelet decomposition to apply the operation.
+            If the level is None, the operation is applied to all existing levels.
         """
         if level is None:
             coeffs = self._apply_op_to_coeffs(coeffs, op)
@@ -991,16 +956,18 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
                 if level == 0:
                     # Apply op over the low freq approx
                     coeffs[wav_i][0] = op(coeffs[wav_i][0])
-                elif level > 0  and level <= len(coeffs[0]):
+                elif level > 0 and level <= len(coeffs[0]):
                     # Apply op to specific level
-                    coeffs[wav_i][level] = tuple([op(elem) for elem in  coeffs[wav_i][level]])
+                    coeffs[wav_i][level] = tuple(
+                        [op(elem) for elem in coeffs[wav_i][level]]
+                    )
                 else:
                     raise ValueError(
-                        'The level requested is higher than the one used in the wavelet decomposition.'
+                        "The level requested is higher than the one used in the wavelet decomposition."
                     )
 
         return coeffs
-    
+
     def _op_to_two_coeffs(self, coeffs1, coeffs2, op):
         """Applies operation to two set of coefficients in ptwt structure.
 
@@ -1013,10 +980,10 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
             coeffs2 (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
                 Second set of wavelet coefficients
             op (function): Operation to apply
-        
+
         Returns:
 
-            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]): 
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
                 Resulting coefficients
         """
         # Iterate over the wavelet dictionaries
@@ -1026,9 +993,12 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
             # Iterate over the wavelet decomp and apply op
             for it1 in range(1, len(coeffs1[0])):
                 coeffs1[wav_i][it1] = tuple(
-                    [op(elem1, elem2) for elem1, elem2 in zip(
-                        coeffs1[wav_i][it1], coeffs2[wav_i][it1]
-                    )]
+                    [
+                        op(elem1, elem2)
+                        for elem1, elem2 in zip(
+                            coeffs1[wav_i][it1], coeffs2[wav_i][it1]
+                        )
+                    ]
                 )
         return coeffs1
 
@@ -1046,10 +1016,10 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
             level (int or None): Level of wavelet decomposition to apply the operation.
                 If the level is None, the operation is applied to all existing levels.
             op (function): Operation to apply
-        
+
         Returns:
 
-            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]): 
+            coeffs (List[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]):
                 Resulting coefficients
         """
         if level is None:
@@ -1060,12 +1030,15 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
                 if level == 0:
                     # Apply op over the low freq approx
                     coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
-                elif level > 0  and level <= len(coeffs1[0]):
+                elif level > 0 and level <= len(coeffs1[0]):
                     # Apply op to specific level
                     coeffs1[wav_i][level] = tuple(
-                        [op(elem1, elem2) for elem1, elem2 in zip(
-                            coeffs1[wav_i][level], coeffs2[wav_i][level]
-                        )]
+                        [
+                            op(elem1, elem2)
+                            for elem1, elem2 in zip(
+                                coeffs1[wav_i][level], coeffs2[wav_i][level]
+                            )
+                        ]
                     )
 
         return coeffs1
@@ -1093,7 +1066,7 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
                     max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
 
         # Apply operation to the coefficients
-        return torch.max(torch.tensor(max_val)).item()    
+        return torch.max(torch.tensor(max_val)).item()
 
     def threshold_coeffs(self, coeffs, thresh, thresh_type, level=None):
         """Threshold coefficients and put to zero
@@ -1111,9 +1084,9 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
             Thresholded coefficients (ptwt.coeffs)
         """
         # Define the element-wise operation
-        if thresh_type == 'soft':
+        if thresh_type == "soft":
             op = lambda _x: self._threshold_soft(_x, thresh=thresh)
-        elif thresh_type == 'hard':
+        elif thresh_type == "hard":
             op = lambda _x: self._threshold_hard(_x, thresh=thresh)
         # Apply operation to the coefficients
         return self._apply_op_to_coeffs_at_level(coeffs, level, op)
@@ -1133,11 +1106,13 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
 
             Modified img (torch.Tensor)
         """
-        return self.adj_op(self._op_to_two_coeffs_at_level(
-                    self.dir_op(img1), self.dir_op(img2), level=level, op=op
-                )).squeeze()
+        return self.adj_op(
+            self._op_to_two_coeffs_at_level(
+                self.dir_op(img1), self.dir_op(img2), level=level, op=op
+            )
+        ).squeeze()
 
-    def full_op_threshold_img(self, img, thresh, level=None, thresh_type='soft'):
+    def full_op_threshold_img(self, img, thresh, level=None, thresh_type="soft"):
         """Threshold image wavelet coefficients
 
         Args:
@@ -1152,9 +1127,11 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
 
             Thresholded img (torch.Tensor)
         """
-        return self.adj_op(self.threshold_coeffs(
-                    self.dir_op(img), thresh=thresh, thresh_type=thresh_type, level=level
-                )).squeeze()
+        return self.adj_op(
+            self.threshold_coeffs(
+                self.dir_op(img), thresh=thresh, thresh_type=thresh_type, level=level
+            )
+        ).squeeze()
 
     def full_op_add_img(self, img, val, level=None):
         """Add val to image wavelet coefficients at given level
@@ -1170,9 +1147,9 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
 
             Modified img (torch.Tensor)
         """
-        return self.adj_op(self.add_value_at_level(
-                    self.dir_op(img), level=level, val=val
-                )).squeeze()
+        return self.adj_op(
+            self.add_value_at_level(self.dir_op(img), level=level, val=val)
+        ).squeeze()
 
     def full_op_mult_img(self, img, val, level=None):
         """Multiply val to image wavelet coefficients at given level
@@ -1188,10 +1165,10 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
 
             Modified img (torch.Tensor)
         """
-        return self.adj_op(self.mult_value_at_level(
-                    self.dir_op(img), level=level, val=val
-                )).squeeze()
-    
+        return self.adj_op(
+            self.mult_value_at_level(self.dir_op(img), level=level, val=val)
+        ).squeeze()
+
     def add_value_at_level(self, coeffs, level, val):
         """Threshold coefficients and put to zero
 
@@ -1245,8 +1222,8 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         # Replaced the use of torch.sign() to add complex value support
         abs_x = torch.abs(x)
         return torch.maximum(
-                torch.zeros_like(abs_x), abs_x - thresh
-            ) * torch.nan_to_num(x / abs_x, nan=0.0)
+            torch.zeros_like(abs_x), abs_x - thresh
+        ) * torch.nan_to_num(x / abs_x, nan=0.0)
 
     def _threshold_hard(self, x, thresh):
         """Threshold coefficients (hard)

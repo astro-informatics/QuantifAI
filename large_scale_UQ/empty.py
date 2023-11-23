@@ -1,10 +1,10 @@
-
 class Identity:
     """Identity operator
 
     Notes:
         Implemented originally in optimus-primal.
     """
+
     def __init__(self):
         """Initialises an identity operator class"""
 

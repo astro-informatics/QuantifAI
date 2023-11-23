@@ -11,7 +11,7 @@ Authors and credit
 from .autocor_plots import *
 from .blur_operators import *
 from .chambolle_prox_TV import *
-from .cshift import * 
+from .cshift import *
 from .Grad_Image import *
 from .max_eigenval import *
 from .measures import *

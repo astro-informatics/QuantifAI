@@ -3,7 +3,7 @@ import logging
 import skimage as ski
 
 
-def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.05):
+def compute_UQ(MC_X_array, superpix_sizes=[32, 16, 8, 4, 1], alpha=0.05):
     """Compute uncertainty quantification stats.
 
     Args:
@@ -14,14 +14,13 @@ def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.05):
 
     Returns:
 
-        quantiles (list(np.ndarray)): List corresponding to the superpix sizes. 
+        quantiles (list(np.ndarray)): List corresponding to the superpix sizes.
             For each element we have the two computed quantiles, `alpha/2` and `1-alpha/2`.
-        st_dev_down (list(np.ndarray)): List corresponding to the superpix sizes. 
+        st_dev_down (list(np.ndarray)): List corresponding to the superpix sizes.
             For each element we have the standard deviation of each superpixel along the samples.
-        means_list (list(np.ndarray)): List corresponding to the superpix sizes. 
+        means_list (list(np.ndarray)): List corresponding to the superpix sizes.
             For each element we have the mean of each superpixel along the samples.
     """
-
 
     n_samples = MC_X_array.shape[0]
     nx = MC_X_array.shape[1]
@@ -31,15 +30,16 @@ def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.05):
     means_list = []
     st_dev_down = []
 
-    p = np.array([alpha/2, 1-alpha/2])
+    p = np.array([alpha / 2, 1 - alpha / 2])
 
-    for k, block_size  in enumerate(superpix_sizes):
-        
-        downsample_array= np.zeros([
-            n_samples,
-            np.int64(np.floor(nx/block_size)),
-            np.int64(np.floor(ny/block_size))
-        ])
+    for k, block_size in enumerate(superpix_sizes):
+        downsample_array = np.zeros(
+            [
+                n_samples,
+                np.int64(np.floor(nx / block_size)),
+                np.int64(np.floor(ny / block_size)),
+            ]
+        )
 
         for j in range(n_samples):
             block_image = ski.measure.block_reduce(
@@ -48,7 +48,7 @@ def compute_UQ(MC_X_array, superpix_sizes=[32,16,8,4,1], alpha=0.05):
             if nx % block_size == 0:
                 downsample_array[j] = block_image
             else:
-                downsample_array[j] = block_image[:-1,:-1]
+                downsample_array[j] = block_image[:-1, :-1]
 
         # Compute quantiles for LCI
         quantiles.append(np.quantile(downsample_array, p, axis=0))
@@ -93,7 +93,7 @@ def bisection_method(function, start_interval, iters, tol, return_iters=False):
             return [eta1, eta2][val], 2
         else:
             return [eta1, eta2][val]
-        
+
     iters_cumul = 0
     for i in range(int(iters)):
         obj1 = function(eta1)
@@ -126,8 +126,8 @@ def create_local_credible_interval(
     tol,
     bottom,
     top,
-    verbose=0.,
-    return_iters=False
+    verbose=0.0,
+    return_iters=False,
 ):
     """Bisection method for finding credible intervals
 
@@ -171,9 +171,9 @@ def create_local_credible_interval(
                 mean[i, j] = x_sum
 
                 def obj(eta):
-                    return - bound + function(
+                    return -bound + function(
                         x_sol * (1.0 - mask) + (x_sum + eta) * mask
-                    ) 
+                    )
 
                 if return_iters:
                     error_p[i, j], bisec_iters = bisection_method(
@@ -182,29 +182,32 @@ def create_local_credible_interval(
                     error_p[i, j] += x_sum
                     iters_cumul += bisec_iters
                 else:
-                    error_p[i, j] = bisection_method(
-                        obj, [0, top], iters, tol, return_iters
-                    ) + x_sum
+                    error_p[i, j] = (
+                        bisection_method(obj, [0, top], iters, tol, return_iters)
+                        + x_sum
+                    )
 
                 def obj(eta):
-                    return - bound + function(
+                    return -bound + function(
                         x_sol * (1.0 - mask) + (x_sum - eta) * mask
-                    ) 
+                    )
 
                 if return_iters:
                     error_m[i, j], bisec_iters = bisection_method(
                         obj, [0, -bottom], iters, tol, return_iters
                     )
-                    error_m[i, j] = error_m[i, j]*-1. + x_sum
+                    error_m[i, j] = error_m[i, j] * -1.0 + x_sum
                     iters_cumul += bisec_iters
                 else:
-                    error_m[i, j] = -bisection_method(
-                        obj, [0, -bottom], iters, tol, return_iters
-                    ) + x_sum
-                
-                if verbose > 0.:
+                    error_m[i, j] = (
+                        -bisection_method(obj, [0, -bottom], iters, tol, return_iters)
+                        + x_sum
+                    )
+
+                if verbose > 0.0:
                     print(
-                        "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s"%(
+                        "[Credible Interval] (%s, %s) has interval (%s, %s) with sum %s"
+                        % (
                             i,
                             j,
                             error_m[i, j],
@@ -230,7 +233,9 @@ def create_local_credible_interval(
                 return function(x_sol * (1.0 - mask) + eta * mask) - bound
 
             if return_iters:
-                error_p[i], bisec_iters = bisection_method(obj, [0, top], iters, tol, return_iters)
+                error_p[i], bisec_iters = bisection_method(
+                    obj, [0, top], iters, tol, return_iters
+                )
                 iters_cumul += bisec_iters
             else:
                 error_p[i] = bisection_method(obj, [0, top], iters, tol, return_iters)
@@ -239,15 +244,20 @@ def create_local_credible_interval(
                 return function(x_sol * (1.0 - mask) - eta * mask) - bound
 
             if return_iters:
-                error_m[i], bisec_iters = bisection_method(obj, [0, -bottom], iters, tol, return_iters)
-                error_m[i] *= -1.
+                error_m[i], bisec_iters = bisection_method(
+                    obj, [0, -bottom], iters, tol, return_iters
+                )
+                error_m[i] *= -1.0
                 iters_cumul += bisec_iters
             else:
-                error_m[i] = -bisection_method(obj, [0, -bottom], iters, tol, return_iters)
-            
-            if verbose > 0.:
+                error_m[i] = -bisection_method(
+                    obj, [0, -bottom], iters, tol, return_iters
+                )
+
+            if verbose > 0.0:
                 print(
-                    "[Credible Interval] %s has interval (%s, %s) with sum %s"%(
+                    "[Credible Interval] %s has interval (%s, %s) with sum %s"
+                    % (
                         i,
                         error_m[i],
                         error_p[i],
@@ -360,4 +370,3 @@ def create_local_credible_interval_fast(
                 x_sum,
             )
     return error_p, error_m, mean
-

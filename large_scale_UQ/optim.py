@@ -1,4 +1,3 @@
-
 import numpy as np
 import time
 import math
@@ -7,16 +6,17 @@ from functools import partial
 from large_scale_UQ import empty as Empty
 from large_scale_UQ.operators import L1Norm_torch
 
+
 def FISTA_CRR_torch(
-        x_init,
-        options=None,
-        likelihood=None,
-        prox_op=None,
-        CRR_model=None,
-        alpha=1.,
-        lmbd=1.,
-        mu=1.,
-    ):
+    x_init,
+    options=None,
+    likelihood=None,
+    prox_op=None,
+    CRR_model=None,
+    alpha=1.0,
+    lmbd=1.0,
+    mu=1.0,
+):
     """Runs the FISTA optimisation algorithm
 
     Note that currently this only supports real positive semi-definite
@@ -39,62 +39,53 @@ def FISTA_CRR_torch(
         likelihood = Empty.EmptyGrad()
     if CRR_model is None:
         CRR_model = Empty.EmptyGrad()
-    
+
     if options is None:
         options = {
-            "tol": 1e-5, "iter": 10000, "update_iter": 100, "record_iters": False
+            "tol": 1e-5,
+            "iter": 10000,
+            "update_iter": 100,
+            "record_iters": False,
         }
-
 
     # initialization
     x_hat = torch.clone(x_init)
     z = torch.clone(x_init)
     t = 1
 
-
-    for it in range(options['iter']):
+    for it in range(options["iter"]):
         x_hat_old = torch.clone(x_hat)
-        x_hat = z - alpha *(
-            likelihood.grad(z) + lmbd * CRR_model.grad(mu * z)
-        )
+        x_hat = z - alpha * (likelihood.grad(z) + lmbd * CRR_model.grad(mu * z))
         # Reality constraint
         x_hat = prox_op.prox(x_hat)
         # Positivity constraint
         # x = torch.clamp(x, 0, None)
-        
-        t_old = t 
-        t = 0.5 * (1 + math.sqrt(1 + 4*t**2))
-        z = x_hat + (t_old - 1)/t * (x_hat - x_hat_old)
+
+        t_old = t
+        t = 0.5 * (1 + math.sqrt(1 + 4 * t**2))
+        z = x_hat + (t_old - 1) / t * (x_hat - x_hat_old)
 
         # relative change of norm for terminating
-        res = (torch.norm(x_hat_old - x_hat)/torch.norm(x_hat_old)).item()
+        res = (torch.norm(x_hat_old - x_hat) / torch.norm(x_hat_old)).item()
 
-        if res < options['tol']:
-            print("[GD] converged in %d iterations"%(it))
+        if res < options["tol"]:
+            print("[GD] converged in %d iterations" % (it))
             break
 
-        if it % options['update_iter'] == 0:
+        if it % options["update_iter"] == 0:
             print(
-                "[GD] %d out of %d iterations, tol = %f" %(            
+                "[GD] %d out of %d iterations, tol = %f"
+                % (
                     it,
-                    options['iter'],
+                    options["iter"],
                     res,
                 )
             )
-    
+
     return x_hat
 
 
-def FB_torch(
-        x_init,
-        options=None,
-        g=None,
-        f=None,
-        h=None,
-        alpha=1,
-        tau=1,
-        viewer=None
-    ):
+def FB_torch(x_init, options=None, g=None, f=None, h=None, alpha=1, tau=1, viewer=None):
     """Runs the base forward backward optimisation algorithm
 
     Note that currently this only supports real positive semi-definite
@@ -135,17 +126,16 @@ def FB_torch(
     criter = np.zeros(max_iter)
 
     # Set subtraction operation
-    _op_sub = lambda _x1, _x2 : _x1 - _x2
+    _op_sub = lambda _x1, _x2: _x1 - _x2
 
     if isinstance(h, L1Norm_torch):
         if h.num_wavs > 0:
             op_sub = partial(h._op_to_two_coeffs, op=_op_sub)
-    else: 
+    else:
         op_sub = _op_sub
 
     # algorithm loop
     for it in range(0, max_iter):
-
         t = time.time()
         # forward step
         x_old = torch.clone(x)
@@ -162,26 +152,28 @@ def FB_torch(
             timing[it] = time.time() - t
             criter[it] = f.fun(x) + g.fun(x) + h.fun(h.dir_op(x))
 
-        if torch.allclose(x, torch.tensor(0., dtype=x.dtype)):
+        if torch.allclose(x, torch.tensor(0.0, dtype=x.dtype)):
             x = x_old
-            print("[Forward Backward] converged to 0 in %d iterations"%(it))
+            print("[Forward Backward] converged to 0 in %d iterations" % (it))
             break
         # stopping rule
         res = (torch.norm(x - x_old) / torch.norm(x_old)).item()
         if it > 10:
             if res < tol:
-                print("[Forward Backward] converged in %d iterations"%(it))
+                print("[Forward Backward] converged in %d iterations" % (it))
                 break
         if update_iter >= 0:
             if it % update_iter == 0:
                 print(
-                    "[Forward Backward] %d out of %d iterations, tol = %.2e"%(
-                    it, max_iter, res,
+                    "[Forward Backward] %d out of %d iterations, tol = %.2e"
+                    % (
+                        it,
+                        max_iter,
+                        res,
                     )
                 )
                 if viewer is not None:
                     viewer(x, it)
-
 
     criter = criter[0 : it + 1]
     timing = np.cumsum(timing[0 : it + 1])
@@ -196,15 +188,15 @@ def FB_torch(
 
 
 def FISTA_torch(
-        x_init,
-        options=None,
-        likelihood=None,
-        cvx_set_prox_op=None,
-        reg_prox_op=None,
-        alpha=1,
-        tau=1,
-        viewer=None
-    ):
+    x_init,
+    options=None,
+    likelihood=None,
+    cvx_set_prox_op=None,
+    reg_prox_op=None,
+    alpha=1,
+    tau=1,
+    viewer=None,
+):
     """Runs the FISTA optimisation algorithm
 
     Note that currently this only supports real positive semi-definite
@@ -247,17 +239,16 @@ def FISTA_torch(
     criter = np.zeros(max_iter)
 
     # Set subtraction operation
-    _op_sub = lambda _x1, _x2 : _x1 - _x2
+    _op_sub = lambda _x1, _x2: _x1 - _x2
 
     if isinstance(reg_prox_op, L1Norm_torch):
         if reg_prox_op.num_wavs > 0:
             op_sub = partial(reg_prox_op._op_to_two_coeffs, op=_op_sub)
-    else: 
+    else:
         op_sub = _op_sub
 
     # algorithm loop
     for it in range(0, max_iter):
-
         t = time.time()
         # forward step
         x_old = torch.clone(x)
@@ -270,36 +261,40 @@ def FISTA_torch(
 
         # FISTA acceleration steps
         a_old = a
-        a = 0.5 * (1 + math.sqrt(1 + 4*a**2))
-        z = x + (a_old - 1)/a * (x - x_old)
+        a = 0.5 * (1 + math.sqrt(1 + 4 * a**2))
+        z = x + (a_old - 1) / a * (x - x_old)
 
         # time and criterion
         if record_iters:
             timing[it] = time.time() - t
-            criter[it] = cvx_set_prox_op.fun(x) + likelihood.fun(x) + reg_prox_op.fun(
-                reg_prox_op.dir_op(x)
+            criter[it] = (
+                cvx_set_prox_op.fun(x)
+                + likelihood.fun(x)
+                + reg_prox_op.fun(reg_prox_op.dir_op(x))
             )
 
-        if torch.allclose(x, torch.tensor(0., dtype=x.dtype)):
+        if torch.allclose(x, torch.tensor(0.0, dtype=x.dtype)):
             x = x_old
-            print("[Forward Backward] converged to 0 in %d iterations"%(it))
+            print("[Forward Backward] converged to 0 in %d iterations" % (it))
             break
         # stopping rule
         res = (torch.norm(x - x_old) / torch.norm(x_old)).item()
         if it > 10:
             if res < tol:
-                print("[Forward Backward] converged in %d iterations"%(it))
+                print("[Forward Backward] converged in %d iterations" % (it))
                 break
         if update_iter >= 0:
             if it % update_iter == 0:
                 print(
-                    "[Forward Backward] %d out of %d iterations, tol = %.2e"%(
-                    it, max_iter, res,
+                    "[Forward Backward] %d out of %d iterations, tol = %.2e"
+                    % (
+                        it,
+                        max_iter,
+                        res,
                     )
                 )
                 if viewer is not None:
                     viewer(x, it)
-
 
     criter = criter[0 : it + 1]
     timing = np.cumsum(timing[0 : it + 1])
@@ -311,4 +306,3 @@ def FISTA_torch(
         "x": x,
     }
     return solution, diagnostics
-
