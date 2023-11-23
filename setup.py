@@ -5,7 +5,7 @@ from os import path
 import numpy
 
 # clean previous build
-for root, dirs, files in os.walk("./large_scale_UQ/", topdown=False):
+for root, dirs, files in os.walk("./QuantifAI/", topdown=False):
     for name in dirs:
         if name == "build":
             shutil.rmtree(name)
@@ -41,10 +41,10 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
     ],
-    name="large_scale_UQ",
+    name="quantifai",
     version="1.0.0",
     prefix=".",
-    url="https://github.com/tobias-liaudat/large-scale-UQ",
+    url="https://github.com/tobias-liaudat/QuantifAI",
     author="Tobias Liaudat et al.",
     author_email="tobiasliaudat@gmail.com",
     license="MIT license",
@@ -52,5 +52,5 @@ setup(
     description="Scalable Bayesian uncertainty quantification with data-driven priors for radio interferometric imaging",
     long_description_content_type="text/x-rst",
     long_description=long_description,
-    packages=["large_scale_UQ"],
+    packages=["quantifai"],
 )
