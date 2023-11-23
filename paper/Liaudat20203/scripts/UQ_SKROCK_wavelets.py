@@ -134,15 +134,15 @@ for img_name in img_name_list:
 
     # %%
     # Define the likelihood
-    g = luq.operators.L2Norm_torch(
+    likelihood = luq.operators.L2Norm_torch(
         sigma=sigma,
         data=torch_y,
         Phi=phi,
     )
-    # Lipschitz constant computed automatically by g, stored in g.beta
+    # Lipschitz constant computed automatically by likelihood, stored in likelihood.beta
 
     # Define real prox
-    f = luq.operators.RealProx_torch()
+    cvx_set_prox_op = luq.operators.RealProx_torch()
 
     # %%
 
@@ -154,22 +154,22 @@ for img_name in img_name_list:
         # Define the wavelet dict
         # Define the l1 norm with dict psi
         psi = luq.operators.DictionaryWv_torch(wavs_list, levels)
-        h = luq.operators.L1Norm_torch(1., psi, op_to_coeffs=True)
-        h.gamma = reg_param
+        reg_prox_op = luq.operators.L1Norm_torch(1., psi, op_to_coeffs=True)
+        reg_prox_op.gamma = reg_param
 
         # Compute stepsize
-        alpha = 0.98 / g.beta
+        alpha = 0.98 / likelihood.beta
 
         # Effective threshold
-        print('Threshold: ', h.gamma * alpha)
+        print('Threshold: ', reg_prox_op.gamma * alpha)
 
         # Run the optimisation
         x_hat, diagnostics = luq.optim.FISTA_torch(
             x_init,
             options=options,
-            g=g,
-            f=f,
-            h=h,
+            likelihood=likelihood,
+            cvx_set_prox_op=cvx_set_prox_op,
+            reg_prox_op=reg_prox_op,
             alpha=alpha,
             tau=alpha,
             viewer=None
@@ -207,11 +207,11 @@ for img_name in img_name_list:
         ### MAP-based UQ
 
         # Define prior potential
-        fun_prior = lambda _x : h._fun_coeffs(h.dir_op(_x))
+        fun_prior = lambda _x : reg_prox_op._fun_coeffs(reg_prox_op.dir_op(_x))
         # Define posterior potential
-        loss_fun_torch = lambda _x : g.fun(_x) +  fun_prior(_x)
+        loss_fun_torch = lambda _x : likelihood.fun(_x) +  fun_prior(_x)
         # Numpy version of the posterior potential
-        loss_fun_np = lambda _x : g.fun(
+        loss_fun_np = lambda _x : likelihood.fun(
             luq.utils.to_tensor(_x, dtype=myType)
         ).item() +  fun_prior(luq.utils.to_tensor(_x, dtype=myType)).item()
 
@@ -330,7 +330,7 @@ for img_name in img_name_list:
 
 
         print(
-            'f(x_map): ', g.fun(x_hat).item(),
+            'f(x_map): ', likelihood.fun(x_hat).item(),
             '\ng(x_map): ', fun_prior(x_hat).item(),
             '\ntau_alpha*np.sqrt(N): ', tau_alpha*np.sqrt(N),
             '\nN: ', N,
@@ -349,7 +349,7 @@ for img_name in img_name_list:
         hpd_results = {
             'alpha': alpha_prob,
             'gamma_alpha': gamma_alpha,
-            'f_xmap': g.fun(x_hat).item(),
+            'f_xmap': likelihood.fun(x_hat).item(),
             'g_xmap': fun_prior(x_hat).item(),
             'h_alpha_N': tau_alpha*np.sqrt(N) + N,
         }
@@ -394,7 +394,7 @@ for img_name in img_name_list:
         )
 
         # Define sampling parameters
-        L_likelihood = g.beta
+        L_likelihood = likelihood.beta
         # Define MY lambda parameter
         lmbd = 1 / L_likelihood
         # Compute MY envelope Lipschitz param
@@ -405,24 +405,24 @@ for img_name in img_name_list:
         delta = frac_delta / L
         # Change model's parameter [optional]
         reg_param_sampling = reg_param
-        h.gamma = reg_param_sampling
+        reg_prox_op.gamma = reg_param_sampling
 
         print('delta', delta)
         print('lmbd: ', lmbd)
-        print('prox thresh: ', h.gamma*lmbd)
+        print('prox thresh: ', reg_prox_op.gamma*lmbd)
         print('(1. - (delta / lmbd)) ', (1. - (delta/lmbd)))
 
         # Function handles to used for ULA
         # Define likelihood functions
-        fun_likelihood = lambda _x : g.fun(_x)
-        grad_likelihood = lambda _x : g.grad(_x)
+        fun_likelihood = lambda _x : likelihood.fun(_x)
+        grad_likelihood = lambda _x : likelihood.grad(_x)
         # Define prior potential
-        fun_prior = lambda _x : h._fun_coeffs(h.dir_op(_x))
+        fun_prior = lambda _x : reg_prox_op._fun_coeffs(reg_prox_op.dir_op(_x))
         # Define prior evaluation
         sub_op = lambda _x1, _x2 : _x1 - _x2
-        prox_prior_cai = lambda _x, lmbd : torch.clone(_x) + h.adj_op(h._op_to_two_coeffs(
-            h.prox(h.dir_op(_x), lmbd),
-            h.dir_op(_x), sub_op
+        prox_prior_cai = lambda _x, lmbd : torch.clone(_x) + reg_prox_op.adj_op(reg_prox_op._op_to_two_coeffs(
+            reg_prox_op.prox(reg_prox_op.dir_op(_x), lmbd),
+            reg_prox_op.dir_op(_x), sub_op
         ))
         # Define prior gradient (from the MY envelope)
         grad_prior = lambda _x, lmbd: (

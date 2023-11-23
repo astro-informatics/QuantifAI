@@ -142,15 +142,15 @@ for img_name in img_name_list:
 
     # %%
     # Define the likelihood
-    g = luq.operators.L2Norm_torch(
+    likelihood = luq.operators.L2Norm_torch(
         sigma=sigma,
         data=torch_y,
         Phi=phi,
     )
-    # Lipschitz constant computed automatically by g, stored in g.beta
+    # Lipschitz constant computed automatically by likelihood, stored in likelihood.beta
 
     # Define real prox
-    f = luq.operators.RealProx_torch()
+    cvx_set_prox_op = luq.operators.RealProx_torch()
 
 
     # %%
@@ -159,18 +159,18 @@ for img_name in img_name_list:
     torch.set_num_threads(4)
 
     exp_name = f'Sigma_{sigma_training}_t_{t_model}/'
-    model = utils_cvx_reg.load_model(CRR_dir_name + exp_name, 'cuda:0', device_type='gpu')
+    CRR_model = utils_cvx_reg.load_model(CRR_dir_name + exp_name, 'cuda:0', device_type='gpu')
 
-    print(f'Numbers of parameters before prunning: {model.num_params}')
-    model.prune()
-    print(f'Numbers of parameters after prunning: {model.num_params}')
+    print(f'Numbers of parameters before prunning: {CRR_model.num_params}')
+    CRR_model.prune()
+    print(f'Numbers of parameters after prunning: {CRR_model.num_params}')
 
     # [not required] intialize the eigen vector of dimension (size, size) associated to the largest eigen value
-    model.initializeEigen(size=100)
+    CRR_model.initializeEigen(size=100)
     # compute bound via a power iteration which couples the activations and the convolutions
-    model.precise_lipschitz_bound(n_iter=100)
+    CRR_model.precise_lipschitz_bound(n_iter=100)
     # the bound is stored in the model
-    L_CRR = model.L.data.item()
+    L_CRR = CRR_model.L.data.item()
     print(f"Lipschitz bound {L_CRR:.3f}")
 
 
@@ -181,43 +181,20 @@ for img_name in img_name_list:
         lmbd = reg_params[it_1]
 
         # Compute stepsize
-        alpha = 0.98 / (g.beta + mu * lmbd * L_CRR)
+        alpha = 0.98 / (likelihood.beta + mu * lmbd * L_CRR)
 
-        # initialization
-        x_hat = torch.clone(x_init)
-        z = torch.clone(x_init)
-        t = 1
 
-        for it_2 in range(options['iter']):
-            x_hat_old = torch.clone(x_hat)
-            # grad = g.grad(z.squeeze()) +  lmbd * model(mu * z)
-            x_hat = z - alpha *(
-                g.grad(z) + lmbd * model(mu * z)
-            )
-            # Reality constraint
-            x_hat = f.prox(x_hat)
-            # Positivity constraint
-            # x = torch.clamp(x, 0, None)
-            
-            t_old = t 
-            t = 0.5 * (1 + math.sqrt(1 + 4*t**2))
-            z = x_hat + (t_old - 1)/t * (x_hat - x_hat_old)
-
-            # relative change of norm for terminating
-            res = (torch.norm(x_hat_old - x_hat)/torch.norm(x_hat_old)).item()
-
-            if res < options['tol']:
-                print("[GD] converged in %d iterations"%(it_2))
-                break
-
-            if it_2 % options['update_iter'] == 0:
-                print(
-                    "[GD] %d out of %d iterations, tol = %f" %(            
-                        it_2,
-                        options['iter'],
-                        res,
-                    )
-                )
+        # Run optimisation algorithm
+        x_hat = luq.optim.FISTA_CRR_torch(
+            x_init,
+            options=options,
+            likelihood=likelihood,
+            prox_op=cvx_set_prox_op,
+            CRR_model=CRR_model,
+            alpha=alpha,
+            lmbd=lmbd,
+            mu=mu,
+        )
 
 
         # %%
@@ -237,13 +214,13 @@ for img_name in img_name_list:
             cax = divider.append_axes('right', size='5%', pad=0.05)
             fig.colorbar(im, cax=cax, orientation='vertical')
             if i == 0:
-                stats_str = '\nRegCost {:.3f}'.format(model.cost(to_tensor(mu * images[i], device=device))[0].item())
+                stats_str = '\nRegCost {:.3f}'.format(CRR_model.cost(to_tensor(mu * images[i], device=device))[0].item())
             if i > 0:   
                 stats_str = '\n(PSNR: {:.2f}, SNR: {:.2f},\nSSIM: {:.2f}, RegCost: {:.3f})'.format(
                     psnr(np_x, images[i], data_range=np_x.max()-np_x.min()),
                     luq.utils.eval_snr(x, images[i]),
                     ssim(np_x, images[i], data_range=np_x.max()-np_x.min()),
-                    model.cost(to_tensor(mu * images[i], device=device))[0].item(),
+                    CRR_model.cost(to_tensor(mu * images[i], device=device))[0].item(),
                     )
             labels[i] += stats_str
             axs[i].set_title(labels[i], fontsize=16)
@@ -254,20 +231,26 @@ for img_name in img_name_list:
         ### MAP-based UQ
 
         #function handles to used for ULA
-        def _fun(_x, model, mu, lmbd):
-            return (lmbd / mu) * model.cost(mu * _x) + g.fun(_x)
+        def _fun(_x, CRR_model, mu, lmbd):
+            return (lmbd / mu) * CRR_model.cost(mu * _x) + likelihood.fun(_x)
 
-        def _grad_fun(_x, g, model, mu, lmbd):
-            return  torch.real(g.grad(_x) + lmbd * model(mu * _x))
+        def _grad_fun(_x, likelihood, CRR_model, mu, lmbd):
+            return  torch.real(likelihood.grad(_x) + lmbd * CRR_model(mu * _x))
         
-        def _prior_fun(_x, model, mu, lmbd):
-            return (lmbd / mu) * model.cost(mu * _x)
+        def _prior_fun(_x, CRR_model, mu, lmbd):
+            return (lmbd / mu) * CRR_model.cost(mu * _x)
 
         # Evaluation of the potentials
-        fun = partial(_fun, model=model, mu=mu, lmbd=lmbd)
-        prior_fun = partial(_prior_fun, model=model, mu=mu, lmbd=lmbd)
+        fun = partial(_fun, CRR_model=CRR_model, mu=mu, lmbd=lmbd)
+        prior_fun = partial(_prior_fun, CRR_model=CRR_model, mu=mu, lmbd=lmbd)
         # Evaluation of the gradient
-        grad_f = partial(_grad_fun, g=g, model=model, mu=mu, lmbd=lmbd)
+        grad_f = partial(
+            _grad_fun,
+            likelihood=likelihood,
+            CRR_model=CRR_model,
+            mu=mu,
+            lmbd=lmbd
+        )
         # Evaluation of the potential in numpy
         fun_np = lambda _x : fun(luq.utils.to_tensor(_x, dtype=myType)).item()
 
@@ -387,7 +370,7 @@ for img_name in img_name_list:
 
 
         print(
-            'f(x_map): ', g.fun(x_hat).item(),
+            'f(x_map): ', likelihood.fun(x_hat).item(),
             '\ng(x_map): ', prior_fun(x_hat).item(),
             '\ntau_alpha*np.sqrt(N): ', tau_alpha*np.sqrt(N),
             '\nN: ', N,
@@ -408,7 +391,7 @@ for img_name in img_name_list:
         hpd_results = {
             'alpha': alpha_prob,
             'gamma_alpha': gamma_alpha,
-            'f_xmap': g.fun(x_hat).item(),
+            'f_xmap': likelihood.fun(x_hat).item(),
             'g_xmap': prior_fun(x_hat).item(),
             'h_alpha_N': tau_alpha*np.sqrt(N) + N,
         }
@@ -452,7 +435,7 @@ for img_name in img_name_list:
         ### Sampling
 
         # Set up sampler
-        Lip_total = mu * lmbd * L_CRR + g.beta 
+        Lip_total = mu * lmbd * L_CRR + likelihood.beta 
 
         #step size for ULA
         delta = frac_delta / Lip_total
@@ -614,7 +597,7 @@ for img_name in img_name_list:
         MC_X_mean = np.mean(MC_X, axis=0)
 
         fig, ax = plt.subplots()
-        ax.set_title(f"Image MMSE (Regularization Cost {model.cost(mu*to_tensor(MC_X_mean, device=device))[0].item():.1f}, PSNR: {peak_signal_noise_ratio(to_tensor(MC_X_mean, device=device), torch_img).item():.2f})")
+        ax.set_title(f"Image MMSE (Regularization Cost {CRR_model.cost(mu*to_tensor(MC_X_mean, device=device))[0].item():.1f}, PSNR: {peak_signal_noise_ratio(to_tensor(MC_X_mean, device=device), torch_img).item():.2f})")
         im = ax.imshow(MC_X_mean, cmap=cmap)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes('right', size='5%', pad=0.05)
