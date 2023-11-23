@@ -64,28 +64,8 @@ def get_hypothesis_test_mask(img_name, physical=True):
     """
     if img_name == 'M31':
         if physical:
-            # Original
-            # mask_x = np.array([144, 179])
-            # mask_y = np.array([29, 64])
-            # Left part
-            # mask_x = np.array([125, 176])
-            # mask_y = np.array([29, 70])
-            # mask_x = np.array([115, 176])
-            # mask_y = np.array([29, 80])
-            # Big left part
-            # mask_x = np.array([67, 176])
-            # mask_y = np.array([29, 101])
-            # Low part
-            # mask_x = np.array([130, 225])
-            # mask_y = np.array([29, 210])
-            # Smaller low part
             mask_x = np.array([143, 225])
             mask_y = np.array([29, 200])
-            # Right part
-            # mask_x = np.array([170, 230])
-            # mask_y = np.array([115, 200]) 
-            # mask_x = np.array([130, 230])
-            # mask_y = np.array([95, 208]) 
         else:
             raise NotImplementedError
 
