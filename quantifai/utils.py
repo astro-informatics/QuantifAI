@@ -77,8 +77,7 @@ def eval_snr(x, x_est):
 
 
 def nrmse(x, y):
-    """ Compute the normalized root mean square error (NRMSE)
-    """
+    """Compute the normalized root mean square error (NRMSE)"""
     x_np = to_numpy(x)
     return np.linalg.norm(x_np - to_numpy(y), "fro") / np.linalg.norm(x_np, "fro")
 
