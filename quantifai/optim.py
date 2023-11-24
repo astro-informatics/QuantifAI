@@ -28,6 +28,7 @@ def FISTA_CRR_torch(
         options (dict): Python dictionary of optimisation configuration parameters
         likelihood (Grad Class): Unconstrained data-fidelity class
         prox_op (Prox Class): Reality constraint
+        CRR_model (ConvexRidgeRegularizer torch.nn.Module): CRR-NN model
         alpha (float): optimisation algorithm step-size
         lmbd (float): regularisation strength
         mu (float): CRR prior scaling parameter
