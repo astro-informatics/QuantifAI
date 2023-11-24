@@ -382,7 +382,7 @@ def create_local_credible_interval(
     """
 
     region = np.zeros(x_sol.shape)
-    print("Calculating credible interval for superpxiel: ", region.shape)
+    print("Calculating credible interval for image of size: ", region.shape)
     if len(x_sol.shape) > 1:
         region[:region_size, :region_size] = 1.0
         dsizey, dsizex = int(x_sol.shape[0] / region_size), int(
