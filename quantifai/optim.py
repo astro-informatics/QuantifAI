@@ -235,7 +235,7 @@ def FISTA_torch(
     z = torch.clone(x_init)
     a = 1
 
-    print("Running Base Forward Backward")
+    print("Running FISTA algorithm")
     timing = np.zeros(max_iter)
     criter = np.zeros(max_iter)
 
