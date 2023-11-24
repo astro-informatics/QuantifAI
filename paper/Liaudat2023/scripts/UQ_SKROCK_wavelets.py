@@ -505,9 +505,9 @@ for img_name in img_name_list:
                 ssim_values.append(
                     structural_similarity_index_measure(torch_img, current_mean).item()
                 )
-                # [TL] Need to use pytorch version of NRMSE!
+                # Need to use pytorch version of NRMSE!
                 nrmse_values.append(
-                    qai.functions.measures.NRMSE(torch_img, current_mean)
+                    qai.utils.nrmse(torch_img, current_mean)
                 )
                 logpi_eval.append(logPi(X).item())
 
