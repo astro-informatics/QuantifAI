@@ -76,7 +76,7 @@ def eval_snr(x, x_est):
     return round(20 * np.log10(num / den), 2)
 
 
-def NRMSE(x, y):
+def nrmse(x, y):
     """ Compute the normalized root mean square error (NRMSE)
     """
     x_np = to_numpy(x)
