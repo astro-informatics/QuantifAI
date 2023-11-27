@@ -31,10 +31,10 @@ A BibTeX entry for the paper is:
 
 .. code-block:: 
 
-     @article{harmonic, 
+     @article{quantifai, 
         author = {Tobías~I.~Liaudat and Matthijs~Mars and Matthew~A.~Price and Marcelo~Pereyra and Marta~M.~Betcke and Jason~D.~McEwen},
          title = {Scalable Bayesian uncertainty quantification with data-driven priors for radio interferometric imaging},
-       journal = {ArXiv},
+       journal = {RAS Techniques and Instruments (RASTI), submitted},
         eprint = {arXiv:0000.00000},
           year = 2023
      }
@@ -42,5 +42,5 @@ A BibTeX entry for the paper is:
 License
 -------
 
-``harmonic`` is released under the MIT license (see `LICENSE.txt <https://github.com/astro-informatics/large-scale-UQ/blob/main/LICENSE.txt>`_).
+``quantifai`` is released under the GPL-3 license (see `LICENSE.txt <https://github.com/astro-informatics/QuantifAI/blob/main/LICENSE.txt>`_).
 
