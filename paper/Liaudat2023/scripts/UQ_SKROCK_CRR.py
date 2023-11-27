@@ -59,7 +59,7 @@ reg_params = [5e4]
 mu = 20
 
 
-# LCI params
+# HPD region param
 alpha_prob = 0.01
 
 # LCI algorithm parameters (bisection)
