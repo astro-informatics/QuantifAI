@@ -54,7 +54,7 @@ The easiest way to get into using `quantifai` is to check the different notebook
  - Compute MAP-based LCIs with the wavelet-based model ([Notebook](https://github.com/astro-informatics/QuantifAI/blob/main/examples/RI_imaging)).
  - Compute the MAP-based fast pixel uncertainty quantification method with `QuantifAI` ([Notebook](https://github.com/astro-informatics/QuantifAI/blob/main/examples/RI_imaging_QuantifAI_fast_pixel_UQ.ipynb)).
  - Compute a hypothesis test on an inpainted surrogate image with `QuantifAI` ([Notebook](https://github.com/astro-informatics/QuantifAI/blob/main/examples/RI_imaging_QuantifAI_hypothesis_test)).
- - Sample from the posterior distribution of the `QuantifAI` model using the SK-ROCK algorithm ([Pereyra et al. 2020]()) and compare the results with sample-based LCIs ([Notebook](https://github.com/astro-informatics/QuantifAI/blob/main/examples/RI_imaging_QuantifAI_sampling)).
+ - Sample from the posterior distribution of the `QuantifAI` model using the SK-ROCK algorithm ([Pereyra et al. 2020](https://doi.org/10.1137/19M1283719)) and compare the results with sample-based LCIs ([Notebook](https://github.com/astro-informatics/QuantifAI/blob/main/examples/RI_imaging_QuantifAI_sampling)).
 
 
 ## Reproducibility
