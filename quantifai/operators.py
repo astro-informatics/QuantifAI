@@ -4,10 +4,9 @@ import torch
 from quantifai.utils import max_eigenval
 from quantifai.empty import Identity
 import ptwt
-from functools import partial
 
 
-class MaskedFourier:
+class MaskedFourier(object):
     """
     Masked fourier sensing operator i.e. MRI/Radio imaging.
     """
