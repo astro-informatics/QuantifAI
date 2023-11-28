@@ -1,3 +1,9 @@
+""" 
+Part of these functions were copied and or modified from 
+https://github.com/astro-informatics/Optimus-Primal
+
+"""
+
 import numpy as np
 import skimage as ski
 import torch
