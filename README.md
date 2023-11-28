@@ -13,7 +13,7 @@ In this code, we bypass the need to perform Markov chain Monte Carlo (MCMC) samp
 
 ## Installation
 
-The `quantifai` package relies on the convex ridge regulariser CRR from [Goujon et al. 2022](https://arxiv.org/abs/2211.12461). The version used to generate the results from the Liaudat et al. paper is the release `v0.1` from the fork [github.com/tobias-liaudat/convex_ridge_regularizers](https://github.com/tobias-liaudat/convex_ridge_regularizers).
+The `quantifai` package relies on the convex ridge regulariser CRR from [Goujon et al. 2022](https://arxiv.org/abs/2211.12461). The version used to generate the results from the Liaudat et al. paper is the release `v0.1` from the fork [github.com/tobias-liaudat/convex_ridge_regularizers](https://github.com/tobias-liaudat/convex_ridge_regularizers). The PyTorch wavelet support relies on the release `v0.1` from the fork [github.com/tobias-liaudat/PyTorch-Wavelet-Toolbox](https://github.com/tobias-liaudat/PyTorch-Wavelet-Toolbox).
 
 We have not yet pushed the Python package to PyPi; therefore, the easiest way to install `quantifai` is to start by cloning the repo
 
@@ -37,10 +37,13 @@ pip install -e .
 
 
 > [!NOTE]  
-> If the user does not want to create a conda environment, he can install the dependencies in the `environment.yml` file. The specific version of the convex ridge regulariser used can be manually installed by running
+> If the user does not want to create a conda environment, he can install the dependencies in the `environment.yml` file. The specific version of the convex ridge regulariser and the PyTorch wavelets used can be manually installed by running
 > ```bash
 > pip install git+https://github.com/tobias-liaudat/convex_ridge_regularizers@v0.1
+> pip install git+https://github.com/tobias-liaudat/PyTorch-Wavelet-Toolbox@v0.1
 > ```
+
+The paper's numerical results were obtained using PyTorch version `1.13.1`.
 
 
 ## Examples & usage
