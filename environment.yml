@@ -20,6 +20,6 @@ dependencies:
       - tqdm
       - scikit-image
       - astropy
-      - ptwt
       - arviz
+      - git+https://github.com/tobias-liaudat/PyTorch-Wavelet-Toolbox@v0.1
       - git+https://github.com/tobias-liaudat/convex_ridge_regularizers@v0.1
