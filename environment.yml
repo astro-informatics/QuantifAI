@@ -21,5 +21,6 @@ dependencies:
       - scikit-image
       - astropy
       - arviz
+      - git+https://github.com/tobias-liaudat/complexPyTorch@v0.1
       - git+https://github.com/tobias-liaudat/PyTorch-Wavelet-Toolbox@v0.1
       - git+https://github.com/tobias-liaudat/convex_ridge_regularizers@v0.1
