@@ -37,9 +37,10 @@ pip install -e .
 
 
 > [!NOTE]  
-> If the user does not want to create a conda environment, they can install the dependencies in the `environment.yml` file. The specific version of the convex ridge regulariser and the PyTorch wavelets used can be manually installed by running
+> If the user does not want to create a conda environment, they can install the dependencies in the `environment.yml` file. The specific version of the convex ridge regulariser, complex PyTorch support and the PyTorch wavelets used can be manually installed by running (in the following order)
 > ```bash
 > pip install git+https://github.com/tobias-liaudat/convex_ridge_regularizers@v0.1
+> pip install git+https://github.com/tobias-liaudat/complexPyTorch@v0.1
 > pip install git+https://github.com/tobias-liaudat/PyTorch-Wavelet-Toolbox@v0.1
 > ```
 
