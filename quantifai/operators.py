@@ -485,7 +485,7 @@ class Wavelets_torch(torch.nn.Module):
     Constructs a linear operator for abstract Daubechies Wavelets
     """
 
-    def __init__(self, wav, levels, mode="periodic"):
+    def __init__(self, wav, levels, mode="periodic", shape=None):
         """Initialises Daubechies Wavelet linear operator class
 
         Args:
@@ -493,11 +493,13 @@ class Wavelets_torch(torch.nn.Module):
             wav (string): Wavelet type (see https://tinyurl.com/5n7wzpmb)
             levels (int): Wavelet levels (scales) to consider
             mode (str): Wavelet signal extension mode
+            shape (tuple): image shape
 
         Raises:
 
             ValueError: Raised when levels are not positive definite
             ValueError: Raised if the wavelet type is not a string
+            ValueError: Raised if wavelet type is `self` and a shape is not provided
 
         """
         super().__init__()
@@ -509,7 +511,14 @@ class Wavelets_torch(torch.nn.Module):
         self.levels = np.int64(levels)
         self.mode = mode
 
-        self.adj_op(self.dir_op(torch.ones((1, 64, 64))))
+        if wav == "self":
+            self.shape = shape
+            if shape is None:
+                raise ValueError("`self` wavelet type requires the shape of the images as input.")
+
+            self.adj_op(self.dir_op(torch.ones(self.shape)))
+        else:
+            self.adj_op(self.dir_op(torch.ones((1, 64, 64))))
 
     def dir_op(self, x):
         """Evaluates the forward abstract wavelet transform of x
@@ -528,13 +537,15 @@ class Wavelets_torch(torch.nn.Module):
 
             ValueError: Raised when the shape of x is not even in every dimension
         """
-        # TODO: Add special case for wavelet `self` 
-        if x.dim() >= 4:
-            return ptwt.wavedec2(
-                x.squeeze(1), wavelet=self.wav, level=self.levels, mode=self.mode
-            )
+        if self.wav == "self":
+            return torch.ravel(x)
         else:
-            return ptwt.wavedec2(x, wavelet=self.wav, level=self.levels, mode=self.mode)
+            if x.dim() >= 4:
+                return ptwt.wavedec2(
+                    x.squeeze(1), wavelet=self.wav, level=self.levels, mode=self.mode
+                )
+            else:
+                return ptwt.wavedec2(x, wavelet=self.wav, level=self.levels, mode=self.mode)
 
     def adj_op(self, coeffs):
         """Evaluates the forward adjoint abstract wavelet transform of x
@@ -548,8 +559,11 @@ class Wavelets_torch(torch.nn.Module):
 
             img (torch.Tensor): reconstruted image.
         """
-        # TODO: Add special case for wavelet `self` 
-        return ptwt.waverec2(coeffs, wavelet=self.wav).squeeze(1)
+        if self.wav == "self":
+            return torch.reshape(coeffs, self.shape)
+        else:
+            return ptwt.waverec2(coeffs, wavelet=self.wav).squeeze(1)
+
 
 
 class DictionaryWv_torch(torch.nn.Module):
@@ -557,7 +571,7 @@ class DictionaryWv_torch(torch.nn.Module):
     Constructs class to permit sparsity averaging across a collection of wavelet dictionaries
     """
 
-    def __init__(self, wavs, levels, mode="periodic"):
+    def __init__(self, wavs, levels, mode="periodic", shape=None):
         """Initialises a linear operator for a collection of abstract wavelet dictionaries
 
         Args:
@@ -565,6 +579,7 @@ class DictionaryWv_torch(torch.nn.Module):
             wavs (list[string]): List of wavelet types (see https://tinyurl.com/5n7wzpmb)
             levels (list[int]): Wavelet levels (scales) to consider
             mode (str): Wavelet signal extension mode shared by all dictionaries
+            shape (tuple): image shape
 
         Raises:
 
@@ -576,11 +591,12 @@ class DictionaryWv_torch(torch.nn.Module):
         self.mode = mode
         self.wavs = wavs
         self.levels = levels
+        self.shape = shape
         if np.isscalar(levels):
             self.levels = np.ones(len(self.wavs)) * levels
         for i in range(len(self.wavs)):
             self.wavelet_list.append(
-                Wavelets_torch(self.wavs[i], self.levels[i], self.mode)
+                Wavelets_torch(self.wavs[i], self.levels[i], self.mode, self.shape)
             )
 
     def dir_op(self, x):
@@ -610,6 +626,7 @@ class DictionaryWv_torch(torch.nn.Module):
         for wav_i in range(1, len(self.wavelet_list)):
             out = out + self.wavelet_list[wav_i].adj_op(coeffs[wav_i])
         return out / len(self.wavelet_list)
+
 
 
 # TODO consider the special case of `self` wavelets
