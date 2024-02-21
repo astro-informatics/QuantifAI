@@ -528,6 +528,7 @@ class Wavelets_torch(torch.nn.Module):
 
             ValueError: Raised when the shape of x is not even in every dimension
         """
+        # TODO: Add special case for wavelet `self` 
         if x.dim() >= 4:
             return ptwt.wavedec2(
                 x.squeeze(1), wavelet=self.wav, level=self.levels, mode=self.mode
@@ -547,6 +548,7 @@ class Wavelets_torch(torch.nn.Module):
 
             img (torch.Tensor): reconstruted image.
         """
+        # TODO: Add special case for wavelet `self` 
         return ptwt.waverec2(coeffs, wavelet=self.wav).squeeze(1)
 
 
@@ -610,6 +612,7 @@ class DictionaryWv_torch(torch.nn.Module):
         return out / len(self.wavelet_list)
 
 
+# TODO consider the special case of `self` wavelets
 class L1Norm_torch(torch.nn.Module):
     """This class computes the proximity operator of the l2 ball.
 
