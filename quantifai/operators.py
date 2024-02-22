@@ -629,7 +629,6 @@ class DictionaryWv_torch(torch.nn.Module):
 
 
 
-# TODO consider the special case of `self` wavelets
 class L1Norm_torch(torch.nn.Module):
     """This class computes the proximity operator of the l2 ball.
 
@@ -677,11 +676,16 @@ class L1Norm_torch(torch.nn.Module):
         """Applies operation to all coefficients in ptwt structure."""
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            coeffs[wav_i][0] = op(coeffs[wav_i][0])
-            # Iterate over the wavelet decomp and apply op
-            for it1 in range(1, len(coeffs[0])):
-                coeffs[wav_i][it1] = tuple([op(elem) for elem in coeffs[wav_i][it1]])
+
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                coeffs[wav_i] = op(coeffs[wav_i])
+            else:
+                # Apply op over the low freq approx
+                coeffs[wav_i][0] = op(coeffs[wav_i][0])
+                # Iterate over the wavelet decomp and apply op
+                for it1 in range(1, len(coeffs[0])):
+                    coeffs[wav_i][it1] = tuple([op(elem) for elem in coeffs[wav_i][it1]])
 
         return coeffs
 
@@ -705,18 +709,23 @@ class L1Norm_torch(torch.nn.Module):
         """
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
-            # Iterate over the wavelet decomp and apply op
-            for it1 in range(1, len(coeffs1[0])):
-                coeffs1[wav_i][it1] = tuple(
-                    [
-                        op(elem1, elem2)
-                        for elem1, elem2 in zip(
-                            coeffs1[wav_i][it1], coeffs2[wav_i][it1]
-                        )
-                    ]
-                )
+
+            if torch.is_tensor(coeffs1[wav_i]) or torch.is_tensor(coeffs2[wav_i]):
+                # case of `self` wavelets
+                coeffs1[wav_i] = op(coeffs1[wav_i], coeffs2[wav_i])
+            else:
+                # Apply op over the low freq approx
+                coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+                # Iterate over the wavelet decomp and apply op
+                for it1 in range(1, len(coeffs1[0])):
+                    coeffs1[wav_i][it1] = tuple(
+                        [
+                            op(elem1, elem2)
+                            for elem1, elem2 in zip(
+                                coeffs1[wav_i][it1], coeffs2[wav_i][it1]
+                            )
+                        ]
+                    )
         return coeffs1
 
     def _get_max_abs_coeffs(self, coeffs):
@@ -734,12 +743,17 @@ class L1Norm_torch(torch.nn.Module):
         max_val = []
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
-            # Iterate over the wavelet decompositions
-            for it1 in range(1, len(coeffs[0])):
-                for it2 in range(len(coeffs[wav_i][it1])):
-                    max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
+
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                max_val.append(torch.max(torch.abs(coeffs[wav_i])))
+            else:
+                # Apply op over the low freq approx
+                max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
+                # Iterate over the wavelet decompositions
+                for it1 in range(1, len(coeffs[0])):
+                    for it2 in range(len(coeffs[wav_i][it1])):
+                        max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
 
         # Apply operation to the coefficients
         return torch.max(torch.tensor(max_val)).item()
@@ -777,12 +791,17 @@ class L1Norm_torch(torch.nn.Module):
         loss = 0
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            loss += self._fun(coeffs[wav_i][0])
-            # Iterate over the wavelet decompositions
-            for it1 in range(1, len(coeffs[0])):
-                for it2 in range(len(coeffs[wav_i][it1])):
-                    loss += self._fun(coeffs[wav_i][it1][it2])
+
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                loss += self._fun(coeffs[wav_i])
+            else:
+                # Apply op over the low freq approx
+                loss += self._fun(coeffs[wav_i][0])
+                # Iterate over the wavelet decompositions
+                for it1 in range(1, len(coeffs[0])):
+                    for it2 in range(len(coeffs[wav_i][it1])):
+                        loss += self._fun(coeffs[wav_i][it1][it2])
 
         # Apply operation to the coefficients
         return loss
@@ -953,11 +972,16 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         """Applies operation to all coefficients in ptwt structure."""
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            coeffs[wav_i][0] = op(coeffs[wav_i][0])
-            # Iterate over the wavelet decomp and apply op
-            for it1 in range(1, len(coeffs[0])):
-                coeffs[wav_i][it1] = tuple([op(elem) for elem in coeffs[wav_i][it1]])
+
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                coeffs[wav_i] = op(coeffs[wav_i])
+            else:
+                # Apply op over the low freq approx
+                coeffs[wav_i][0] = op(coeffs[wav_i][0])
+                # Iterate over the wavelet decomp and apply op
+                for it1 in range(1, len(coeffs[0])):
+                    coeffs[wav_i][it1] = tuple([op(elem) for elem in coeffs[wav_i][it1]])
 
         return coeffs
 
@@ -972,18 +996,23 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         else:
             # Iterate over the wavelet dictionaries
             for wav_i in range(self.num_wavs):
-                if level == 0:
-                    # Apply op over the low freq approx
-                    coeffs[wav_i][0] = op(coeffs[wav_i][0])
-                elif level > 0 and level <= len(coeffs[0]):
-                    # Apply op to specific level
-                    coeffs[wav_i][level] = tuple(
-                        [op(elem) for elem in coeffs[wav_i][level]]
-                    )
+                if torch.is_tensor(coeffs[wav_i]):
+                    # case of `self` wavelets
+                    # `self` wavelets do not have levels
+                    coeffs[wav_i] = op(coeffs[wav_i])
                 else:
-                    raise ValueError(
-                        "The level requested is higher than the one used in the wavelet decomposition."
-                    )
+                    if level == 0:
+                        # Apply op over the low freq approx
+                        coeffs[wav_i][0] = op(coeffs[wav_i][0])
+                    elif level > 0 and level <= len(coeffs[0]):
+                        # Apply op to specific level
+                        coeffs[wav_i][level] = tuple(
+                            [op(elem) for elem in coeffs[wav_i][level]]
+                        )
+                    else:
+                        raise ValueError(
+                            "The level requested is higher than the one used in the wavelet decomposition."
+                        )
 
         return coeffs
 
@@ -1007,18 +1036,23 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         """
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
-            # Iterate over the wavelet decomp and apply op
-            for it1 in range(1, len(coeffs1[0])):
-                coeffs1[wav_i][it1] = tuple(
-                    [
-                        op(elem1, elem2)
-                        for elem1, elem2 in zip(
-                            coeffs1[wav_i][it1], coeffs2[wav_i][it1]
-                        )
-                    ]
-                )
+
+            if torch.is_tensor(coeffs1[wav_i]) or torch.is_tensor(coeffs2[wav_i]):
+                # case of `self` wavelets
+                coeffs1[wav_i] = op(coeffs1[wav_i], coeffs2[wav_i])
+            else:
+                # Apply op over the low freq approx
+                coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+                # Iterate over the wavelet decomp and apply op
+                for it1 in range(1, len(coeffs1[0])):
+                    coeffs1[wav_i][it1] = tuple(
+                        [
+                            op(elem1, elem2)
+                            for elem1, elem2 in zip(
+                                coeffs1[wav_i][it1], coeffs2[wav_i][it1]
+                            )
+                        ]
+                    )
         return coeffs1
 
     def _op_to_two_coeffs_at_level(self, coeffs1, coeffs2, level, op):
@@ -1046,19 +1080,24 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         else:
             # Iterate over the wavelet dictionaries
             for wav_i in range(self.num_wavs):
-                if level == 0:
-                    # Apply op over the low freq approx
-                    coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
-                elif level > 0 and level <= len(coeffs1[0]):
-                    # Apply op to specific level
-                    coeffs1[wav_i][level] = tuple(
-                        [
-                            op(elem1, elem2)
-                            for elem1, elem2 in zip(
-                                coeffs1[wav_i][level], coeffs2[wav_i][level]
-                            )
-                        ]
-                    )
+
+                if torch.is_tensor(coeffs1[wav_i]) or torch.is_tensor(coeffs2[wav_i]):
+                    # case of `self` wavelets
+                    coeffs1[wav_i] = op(coeffs1[wav_i], coeffs2[wav_i])
+                else:
+                    if level == 0:
+                        # Apply op over the low freq approx
+                        coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+                    elif level > 0 and level <= len(coeffs1[0]):
+                        # Apply op to specific level
+                        coeffs1[wav_i][level] = tuple(
+                            [
+                                op(elem1, elem2)
+                                for elem1, elem2 in zip(
+                                    coeffs1[wav_i][level], coeffs2[wav_i][level]
+                                )
+                            ]
+                        )
 
         return coeffs1
 
@@ -1077,12 +1116,17 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         max_val = []
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
-            # Iterate over the wavelet decompositions
-            for it1 in range(1, len(coeffs[0])):
-                for it2 in range(len(coeffs[wav_i][it1])):
-                    max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
+
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                max_val.append(torch.max(torch.abs(coeffs[wav_i])))
+            else:
+                # Apply op over the low freq approx
+                max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
+                # Iterate over the wavelet decompositions
+                for it1 in range(1, len(coeffs[0])):
+                    for it2 in range(len(coeffs[wav_i][it1])):
+                        max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
 
         # Apply operation to the coefficients
         return torch.max(torch.tensor(max_val)).item()
@@ -1285,3 +1329,4 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
             Forward adjoint regularisation operator applied to x
         """
         return self.Psi.adj_op(x)
+
