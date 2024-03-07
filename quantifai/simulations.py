@@ -1,26 +1,36 @@
 """
 Installation instructions for mac M1/2/3
 
+``` bash
 CONDA_SUBDIR=osx-64 conda create -n env_x86_py36 python=3.6
 conda activate env_x86_py36
-
+```
 
 # Install CASA software with pip
 # See https://casadocs.readthedocs.io/en/stable/notebooks/introduction.html#Modular-Packages
 # Be careful with the versions (the ones cited in teh docs are often incompatible)
 
 # Install simms package
+``` bash
 git clone https://github.com/ratt-ru/simms
 cd simms
 pip install .
-
+```
 
 # Commands used to generate the Meerkat datasets in the repository
+``` bash
 simms -dir J2000,13h18m54.86s,-15d36m04.25s -os -T meerkat -dt 240 -st 1 -nc 10 -f0 1400MHz -df 10MHz -pl XX YY -n meerkat_simulation_1h.ms
 simms -dir J2000,13h18m54.86s,-15d36m04.25s -os -T meerkat -dt 240 -st 2 -nc 10 -f0 1400MHz -df 10MHz -pl XX YY -n meerkat_simulation_2h.ms
 simms -dir J2000,13h18m54.86s,-15d36m04.25s -os -T meerkat -dt 240 -st 4 -nc 10 -f0 1400MHz -df 10MHz -pl XX YY -n meerkat_simulation_4h.ms
 simms -dir J2000,13h18m54.86s,-15d36m04.25s -os -T meerkat -dt 240 -st 8 -nc 10 -f0 1400MHz -df 10MHz -pl XX YY -n meerkat_simulation_8h.ms
-
+```
+# or
+``` python
+generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=1, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
+generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=2, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
+generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=4, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
+generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=8, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
+```
 """
 
 
