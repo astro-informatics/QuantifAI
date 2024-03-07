@@ -337,7 +337,7 @@ class MaskedFourier_torch(torch.nn.Module):
         return torch.fft.ifft2(x, norm=self.norm)
 
 
-class NUFFT2D_Torch:
+class NUFFT2D_Torch(torch.nn.Module):
     """NUFFT implementation using a Kaiser-Bessel kernel for interpolation.
     Implemented with TF operations. Only able to do the FFT on the last 2 axes
     of the tensors provided. Slower than using the numpy_function on the np
@@ -351,7 +351,21 @@ class NUFFT2D_Torch:
         self.device = device
 
 
-    def plan(self, uv, Nd, Kd, Jd, batch_size):
+    def plan(self, uv, Nd=(256,256), Kd=(512,512), Jd=(6,6), batch_size=1):
+        """ Precompute kernels
+
+        Args:
+            uv (np.ndarray): uv visibilities positions. Array of size `(M,2)` where `M` is the number of visibilities.
+            Nd ((int, int)): intensity image size.
+            Kd ((int, int)): interpolation size. Up-sampling of 2x is typical (and hardcoded in the op)
+            Jd ((int, int)): size for gridding kernel.
+            batch_size (int): batch size used with the operator
+
+        """
+        # Checking the size until more flexibility is added
+        assert Nd[0] * 2 == Kd[0]
+        assert Nd[1] * 2 == Kd[1]
+
         # saving some values
         self.Nd = Nd
         self.Kd = Kd
@@ -431,7 +445,7 @@ class NUFFT2D_Torch:
         self.scaling = (sa_1.reshape(-1, 1) * sa_2.reshape(1, -1)).reshape(
             1, Nd[0], Nd[1]
         )
-        self.scaling = self.scaling.to(copy=True, device=self.device, dtype=self.myComplexType)
+        self.scaling = torch.tensor(self.scaling, device=self.device, dtype=self.myComplexType)
         self.forward = self.dir_op
         self.adjoint = self.adj_op
 
@@ -498,7 +512,7 @@ class NUFFT2D_Torch:
     def _kk2k(self, kk):
         """interpolates of the grid to non uniform measurements"""
 
-        print(kk.shape)
+        # print(kk.shape)
 
         return (
             kk[self.batch_indices].reshape(
