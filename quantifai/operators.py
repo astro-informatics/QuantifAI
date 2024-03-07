@@ -344,8 +344,12 @@ class NUFFT2D_Torch:
     based operations.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, device, myType=torch.float32, myComplexType=torch.complex64):
+
+        self.myType = myType
+        self.myComplexType = myComplexType
+        self.device = device
+
 
     def plan(self, uv, Nd, Kd, Jd, batch_size):
         # saving some values
@@ -427,7 +431,7 @@ class NUFFT2D_Torch:
         self.scaling = (sa_1.reshape(-1, 1) * sa_2.reshape(1, -1)).reshape(
             1, Nd[0], Nd[1]
         )
-        self.scaling = torch.tensor(self.scaling, dtype=torch.complex64)
+        self.scaling = self.scaling.to(copy=True, device=self.device, dtype=self.myComplexType)
         self.forward = self.dir_op
         self.adjoint = self.adj_op
 
@@ -474,7 +478,7 @@ class NUFFT2D_Torch:
         return indices.T, values
 
     def dir_op(self, xx):
-        xx = torch.tensor(xx, dtype=torch.complex64)
+        xx = xx.to(copy=True, device=self.device, dtype=self.myComplexType)
         xx = xx / self.scaling
         xx = self._pad(xx)
         kk = self._xx2kk(xx) / self.K_norm
@@ -510,7 +514,7 @@ class NUFFT2D_Torch:
         ).reshape(-1)
 
         kk_flat = torch.zeros(
-            self.batch_size * self.Kd[0] * self.Kd[1], dtype=torch.complex64
+            self.batch_size * self.Kd[0] * self.Kd[1], dtype=self.myComplexType
         )
         kk_flat.scatter_add_(0, self.flat_batch_indices, interp)
 
