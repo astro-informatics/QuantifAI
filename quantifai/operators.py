@@ -345,7 +345,7 @@ class NUFFT2D_Torch(torch.nn.Module):
     """
 
     def __init__(self, device, myType=torch.float32, myComplexType=torch.complex64):
-
+        super().__init__()
         self.myType = myType
         self.myComplexType = myComplexType
         self.device = device
@@ -414,15 +414,19 @@ class NUFFT2D_Torch(torch.nn.Module):
         batch_indicators = np.repeat(np.arange(batch_size), (len(values)))
         batch_indices = np.hstack((batch_indicators[:, None], batch_indices))
 
-        self.flat_batch_indices = torch.LongTensor(
-            np.ravel_multi_index(batch_indices.T, (batch_size, Kd[0], Kd[1]))
+        self.flat_batch_indices = torch.tensor(
+            np.ravel_multi_index(batch_indices.T, (batch_size, Kd[0], Kd[1])),
+            dtype=torch.int64,
+            device=self.device
         )
 
         self.batch_indices = list(torch.LongTensor(batch_indices).T)
-        self.batch_values = (
+        self.batch_values = torch.tensor(
             np.tile(values, [batch_size, 1])
             .astype(np.float32)
-            .reshape(self.batch_size, self.n_measurements, self.Jd[0] * self.Jd[1])
+            .reshape(self.batch_size, self.n_measurements, self.Jd[0] * self.Jd[1]),
+            device=self.device,
+            dtype=self.myType
         )
 
         # determine scaling based on iFT of the KB kernel
@@ -512,8 +516,6 @@ class NUFFT2D_Torch(torch.nn.Module):
     def _kk2k(self, kk):
         """interpolates of the grid to non uniform measurements"""
 
-        # print(kk.shape)
-
         return (
             kk[self.batch_indices].reshape(
                 self.batch_size, self.n_measurements, self.Jd[0] * self.Jd[1]
@@ -523,12 +525,15 @@ class NUFFT2D_Torch(torch.nn.Module):
 
     def _k2kk(self, k):
         """convolutes measurements to oversampled fft grid"""
+
         interp = (
             k.reshape(self.batch_size, self.n_measurements, 1) * self.batch_values
         ).reshape(-1)
 
         kk_flat = torch.zeros(
-            self.batch_size * self.Kd[0] * self.Kd[1], dtype=self.myComplexType
+            self.batch_size * self.Kd[0] * self.Kd[1],
+            device=self.device,
+            dtype=self.myComplexType
         )
         kk_flat.scatter_add_(0, self.flat_batch_indices, interp)
 
@@ -581,7 +586,7 @@ class L2Norm_torch(torch.nn.Module):
     When the input 'x' is an array. 'y' is a data vector, `sigma` is a scalar uncertainty
     """
 
-    def __init__(self, sigma, data, Phi=None):
+    def __init__(self, sigma, data, Phi=None, im_shape=None):
         """Initialises the l2_norm class
 
         Args:
@@ -589,6 +594,7 @@ class L2Norm_torch(torch.nn.Module):
             sigma (double): Noise standard deviation
             data (np.ndarray): Observed data
             Phi (Linear operator): Sensing operator
+            im_shape (tuple): shape of the x image
 
         Raises:
 
@@ -601,6 +607,12 @@ class L2Norm_torch(torch.nn.Module):
         # Set parameters and data
         self.sigma = sigma
         self.data = data
+
+        if im_shape is None:
+            self.im_shape = self.data.shape  # torch.squeeze(self.data).shape
+        else:
+            self.im_shape = im_shape
+
         if Phi is None:
             self.Phi = Identity()
             # Compute Lipschitz constant
@@ -623,7 +635,7 @@ class L2Norm_torch(torch.nn.Module):
         max_val = max_eigenval(
             A=A,
             At=At,
-            im_shape=torch.squeeze(self.data).shape,
+            im_shape=self.im_shape,
             tol=1e-4,
             max_iter=int(1e4),
             verbose=0,
