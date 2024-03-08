@@ -54,9 +54,11 @@ def FISTA_CRR_torch(
     z = torch.clone(x_init)
     t = 1
 
+    im_shape = x_init.shape
+
     for it in range(options["iter"]):
         x_hat_old = torch.clone(x_hat)
-        x_hat = z - alpha * (likelihood.grad(z) + lmbd * CRR_model.grad(mu * z))
+        x_hat = z - alpha * (likelihood.grad(z) + lmbd * CRR_model.grad(mu * z).reshape(im_shape))
         # Reality constraint
         x_hat = prox_op.prox(x_hat)
         # Positivity constraint
