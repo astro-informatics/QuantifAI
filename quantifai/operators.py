@@ -342,6 +342,8 @@ class NUFFT2D_Torch(torch.nn.Module):
     Implemented with TF operations. Only able to do the FFT on the last 2 axes
     of the tensors provided. Slower than using the numpy_function on the np
     based operations.
+
+    Original credit to Matthijs Mars in https://github.com/astro-informatics/LeIA/
     """
 
     def __init__(self, device, myType=torch.float32, myComplexType=torch.complex64):
