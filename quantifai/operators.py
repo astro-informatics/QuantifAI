@@ -600,6 +600,8 @@ class KbNuFFT2d_torch(torch.nn.Module):
         Number of neighbors to use for interpolation in each dimension.
     k_oversampling :  Union[int, float]
         Oversampling of the k space grid, should be between `1.25` and `2`. Usually set to `2`.
+    norm_type : str
+        Whether to apply normalization with the FFT operation. Options are ``"ortho"`` or ``None``.
     myType : torch.dtype
         Type for float numbers.
     myComplexType : torch.dtype
@@ -613,6 +615,7 @@ class KbNuFFT2d_torch(torch.nn.Module):
         device,
         interp_points=7,
         k_oversampling=2,
+        norm_type="ortho",
         myType=torch.float32,
         myComplexType=torch.complex64
     ):
@@ -624,16 +627,16 @@ class KbNuFFT2d_torch(torch.nn.Module):
         self.interp_points = interp_points
         self.myType = myType
         self.myComplexType = myComplexType
+        self.norm_type = norm_type
         self.device = device
-
-        # Initial scaling
-        self.scaling = 1.
 
         # Define oversampled grid
         self.grid_size = (
             int(self.im_shape[0] * k_oversampling),
             int(self.im_shape[1] * k_oversampling)
         )
+        # To be computed
+        self.norm = None
 
         # Init interpolation matrix
         self.init_interp_matrix()   
@@ -653,9 +656,8 @@ class KbNuFFT2d_torch(torch.nn.Module):
             device=self.device,
             dtype=self.myType
         )
-
-        # Initialise scaling
-        self.init_scaling()
+        # Compute norm
+        self.compute_norm()
         
 
     def init_interp_matrix(self):
@@ -680,15 +682,6 @@ class KbNuFFT2d_torch(torch.nn.Module):
             device=self.device,
         )
 
-    def init_scaling(self):
-        # Initial scaling is 1
-        # Compute operator norm
-        self.compute_norm()
-        # Set scaling as the norm
-        self.scaling = self.norm
-        # Now that scaling is set to the norm, recompute
-        self.compute_norm()
-
     def dir_op(self, x):
         """Forward operator.
 
@@ -698,9 +691,10 @@ class KbNuFFT2d_torch(torch.nn.Module):
             Input image of shape (B, 1, H, W), as the channel dimension C should be 1.
         """
         return self.forwardOp(
-            x.to(self.myComplexType),
-            self.uv,
-            self.interp_mat
+            image=x.to(self.myComplexType),
+            omega=self.uv,
+            interp_mats=self.interp_mat,
+            norm=self.norm_type
         )
     
     def adj_op(self, k):
@@ -711,7 +705,12 @@ class KbNuFFT2d_torch(torch.nn.Module):
         k : torch.Tensor
             Measurement set corresponding to the stored uv plane. Shape (B, 1, N).
         """
-        return self.adjointOp(k, self.uv, self.interp_mat) / self.scaling
+        return self.adjointOp(
+            data=k,
+            omega=self.uv,
+            interp_mats=self.interp_mat,
+            norm=self.norm_type
+        )
 
 
 class L2Norm_torch(torch.nn.Module):
