@@ -372,6 +372,9 @@ class NUFFT2D_Torch(torch.nn.Module):
         assert Nd[0] * 2 == Kd[0]
         assert Nd[1] * 2 == Kd[1]
 
+        if Nd[0] != Nd[1]:
+            print("WARNING! This NuFFT2D operator is not working propely for non-squared images. Please use `qai.utils.KbNuFFT2d_torch`")
+
         # saving some values
         self.Nd = Nd
         self.Kd = Kd
