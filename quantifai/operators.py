@@ -6,6 +6,10 @@ from quantifai.empty import Identity
 import ptwt
 from scipy.special import iv, jv
 
+try:
+    import torchkbnufft as tkbn
+except ModuleNotFoundError:
+    print("torchkbnufft has not been installed, cannot use `KbNuFFT2d_torch`.")
 
 class MaskedFourier(object):
     """
@@ -578,6 +582,136 @@ class NUFFT2D_Torch(torch.nn.Module):
             (self.Kd[1] - self.Nd[1]) // 2 : (self.Kd[1] - self.Nd[1]) // 2
             + self.Nd[1],
         ]
+
+
+
+class KbNuFFT2d_torch(torch.nn.Module):
+    """Alternative implementation of the NuFFT with Kaisser-Besel kernels.
+    
+    Parameters
+    ----------
+    uv : torch.Tensor
+        uv plane with N measurements. Shape (2, N)
+    im_size : tuple
+        Size of image to reconstruct. Shape (n, m)
+    device : torch.device
+        Torch device.
+    interp_points : Union[int, Sequence[int]]
+        Number of neighbors to use for interpolation in each dimension.
+    k_oversampling :  Union[int, float]
+        Oversampling of the k space grid, should be between `1.25` and `2`. Usually set to `2`.
+    myType : torch.dtype
+        Type for float numbers.
+    myComplexType : torch.dtype
+        Type for complex numbers.
+
+    """ 
+    def __init__(
+        self,
+        uv,
+        im_shape,
+        device,
+        interp_points=7,
+        k_oversampling=2,
+        myType=torch.float32,
+        myComplexType=torch.complex64
+    ):
+        super().__init__()
+        assert len(uv.shape) == 2
+        assert len(im_shape) == 2
+        self.uv = uv
+        self.im_shape = im_shape
+        self.interp_points = interp_points
+        self.myType = myType
+        self.myComplexType = myComplexType
+        self.device = device
+
+        # Initial scaling
+        self.scaling = 1.
+
+        # Define oversampled grid
+        self.grid_size = (
+            int(self.im_shape[0] * k_oversampling),
+            int(self.im_shape[1] * k_oversampling)
+        )
+
+        # Init interpolation matrix
+        self.init_interp_matrix()   
+
+        # Initialise base operator layers
+        self.forwardOp = tkbn.KbNufft(
+            im_size=self.im_shape,
+            grid_size = self.grid_size,
+            numpoints=self.interp_points,
+            device=self.device,
+            dtype=self.myType
+        )
+        self.adjointOp = tkbn.KbNufftAdjoint(
+            im_size=self.im_shape,
+            grid_size = self.grid_size,
+            numpoints=self.interp_points,
+            device=self.device,
+            dtype=self.myType
+        )
+
+        # Initialise scaling
+        self.init_scaling()
+        
+
+    def init_interp_matrix(self):
+        with torch.no_grad():
+            self.interp_mat = tkbn.calc_tensor_spmatrix(
+                self.uv,
+                im_size=self.im_shape,
+                grid_size=self.grid_size,
+                numpoints=self.interp_points,
+            )
+
+    def compute_norm(self):
+        """Compute operator norm
+        """
+        self.norm = max_eigenval(
+            A=self.dir_op,
+            At=self.adj_op,
+            im_shape=(1,1) + self.im_shape,
+            tol=1e-4,
+            max_iter=np.int64(1e4),
+            verbose=0,
+            device=self.device,
+        )
+
+    def init_scaling(self):
+        # Initial scaling is 1
+        # Compute operator norm
+        self.compute_norm()
+        # Set scaling as the norm
+        self.scaling = self.norm
+        # Now that scaling is set to the norm, recompute
+        self.compute_norm()
+
+    def dir_op(self, x):
+        """Forward operator.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input image of shape (B, 1, H, W), as the channel dimension C should be 1.
+        """
+        return self.forwardOp(
+            x.to(self.myComplexType),
+            self.uv,
+            self.interp_mat
+        )
+    
+    def adj_op(self, k):
+        """Adjoint operator.
+
+        Parameters
+        ----------
+        k : torch.Tensor
+            Measurement set corresponding to the stored uv plane. Shape (B, 1, N).
+        """
+        return self.adjointOp(k, self.uv, self.interp_mat) / self.scaling
 
 
 class L2Norm_torch(torch.nn.Module):
