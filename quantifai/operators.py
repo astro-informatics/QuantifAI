@@ -11,6 +11,7 @@ try:
 except ModuleNotFoundError:
     print("torchkbnufft has not been installed, cannot use `KbNuFFT2d_torch`.")
 
+
 class MaskedFourier(object):
     """
     Masked fourier sensing operator i.e. MRI/Radio imaging.
@@ -356,9 +357,8 @@ class NUFFT2D_Torch(torch.nn.Module):
         self.myComplexType = myComplexType
         self.device = device
 
-
-    def plan(self, uv, Nd=(256,256), Kd=(512,512), Jd=(6,6), batch_size=1):
-        """ Precompute kernels
+    def plan(self, uv, Nd=(256, 256), Kd=(512, 512), Jd=(6, 6), batch_size=1):
+        """Precompute kernels
 
         Args:
             uv (np.ndarray): uv visibilities positions. Array of size `(M,2)` where `M` is the number of visibilities.
@@ -373,7 +373,9 @@ class NUFFT2D_Torch(torch.nn.Module):
         assert Nd[1] * 2 == Kd[1]
 
         if Nd[0] != Nd[1]:
-            print("WARNING! This NuFFT2D operator is not working propely for non-squared images. Please use `qai.utils.KbNuFFT2d_torch`")
+            print(
+                "WARNING! This NuFFT2D operator is not working propely for non-squared images. Please use `qai.utils.KbNuFFT2d_torch`"
+            )
 
         # saving some values
         self.Nd = Nd
@@ -426,7 +428,7 @@ class NUFFT2D_Torch(torch.nn.Module):
         self.flat_batch_indices = torch.tensor(
             np.ravel_multi_index(batch_indices.T, (batch_size, Kd[0], Kd[1])),
             dtype=torch.int64,
-            device=self.device
+            device=self.device,
         )
 
         self.batch_indices = list(torch.LongTensor(batch_indices).T)
@@ -435,7 +437,7 @@ class NUFFT2D_Torch(torch.nn.Module):
             .astype(np.float32)
             .reshape(self.batch_size, self.n_measurements, self.Jd[0] * self.Jd[1]),
             device=self.device,
-            dtype=self.myType
+            dtype=self.myType,
         )
 
         # determine scaling based on iFT of the KB kernel
@@ -458,7 +460,9 @@ class NUFFT2D_Torch(torch.nn.Module):
         self.scaling = (sa_1.reshape(-1, 1) * sa_2.reshape(1, -1)).reshape(
             1, Nd[0], Nd[1]
         )
-        self.scaling = torch.tensor(self.scaling, device=self.device, dtype=self.myComplexType)
+        self.scaling = torch.tensor(
+            self.scaling, device=self.device, dtype=self.myComplexType
+        )
         self.forward = self.dir_op
         self.adjoint = self.adj_op
 
@@ -542,7 +546,7 @@ class NUFFT2D_Torch(torch.nn.Module):
         kk_flat = torch.zeros(
             self.batch_size * self.Kd[0] * self.Kd[1],
             device=self.device,
-            dtype=self.myComplexType
+            dtype=self.myComplexType,
         )
         kk_flat.scatter_add_(0, self.flat_batch_indices, interp)
 
@@ -587,10 +591,9 @@ class NUFFT2D_Torch(torch.nn.Module):
         ]
 
 
-
 class KbNuFFT2d_torch(torch.nn.Module):
     """Alternative implementation of the NuFFT with Kaisser-Besel kernels.
-    
+
     Parameters
     ----------
     uv : torch.Tensor
@@ -610,7 +613,8 @@ class KbNuFFT2d_torch(torch.nn.Module):
     myComplexType : torch.dtype
         Type for complex numbers.
 
-    """ 
+    """
+
     def __init__(
         self,
         uv,
@@ -620,7 +624,7 @@ class KbNuFFT2d_torch(torch.nn.Module):
         k_oversampling=2,
         norm_type="ortho",
         myType=torch.float32,
-        myComplexType=torch.complex64
+        myComplexType=torch.complex64,
     ):
         super().__init__()
         assert len(uv.shape) == 2
@@ -636,32 +640,31 @@ class KbNuFFT2d_torch(torch.nn.Module):
         # Define oversampled grid
         self.grid_size = (
             int(self.im_shape[0] * k_oversampling),
-            int(self.im_shape[1] * k_oversampling)
+            int(self.im_shape[1] * k_oversampling),
         )
         # To be computed
         self.norm = None
 
         # Init interpolation matrix
-        self.init_interp_matrix()   
+        self.init_interp_matrix()
 
         # Initialise base operator layers
         self.forwardOp = tkbn.KbNufft(
             im_size=self.im_shape,
-            grid_size = self.grid_size,
+            grid_size=self.grid_size,
             numpoints=self.interp_points,
             device=self.device,
-            dtype=self.myType
+            dtype=self.myType,
         )
         self.adjointOp = tkbn.KbNufftAdjoint(
             im_size=self.im_shape,
-            grid_size = self.grid_size,
+            grid_size=self.grid_size,
             numpoints=self.interp_points,
             device=self.device,
-            dtype=self.myType
+            dtype=self.myType,
         )
         # Compute norm
         self.compute_norm()
-        
 
     def init_interp_matrix(self):
         with torch.no_grad():
@@ -673,12 +676,11 @@ class KbNuFFT2d_torch(torch.nn.Module):
             )
 
     def compute_norm(self):
-        """Compute operator norm
-        """
+        """Compute operator norm"""
         self.norm = max_eigenval(
             A=self.dir_op,
             At=self.adj_op,
-            im_shape=(1,1) + self.im_shape,
+            im_shape=(1, 1) + self.im_shape,
             tol=1e-4,
             max_iter=np.int64(1e4),
             verbose=0,
@@ -697,9 +699,9 @@ class KbNuFFT2d_torch(torch.nn.Module):
             image=x.to(self.myComplexType),
             omega=self.uv,
             interp_mats=self.interp_mat,
-            norm=self.norm_type
+            norm=self.norm_type,
         )
-    
+
     def adj_op(self, k):
         """Adjoint operator.
 
@@ -709,10 +711,7 @@ class KbNuFFT2d_torch(torch.nn.Module):
             Measurement set corresponding to the stored uv plane. Shape (B, 1, N).
         """
         return self.adjointOp(
-            data=k,
-            omega=self.uv,
-            interp_mats=self.interp_mat,
-            norm=self.norm_type
+            data=k, omega=self.uv, interp_mats=self.interp_mat, norm=self.norm_type
         )
 
 
