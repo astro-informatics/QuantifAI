@@ -31,6 +31,33 @@ generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=2, direc
 generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=4, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
 generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=8, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
 ```
+
+Info about the parameters:
+-df
+    default="50MHz"
+    help="Channel width. Specify as val[unit]. E.g 700MHz, not unit => Hz "
+    "Use a comma separated list of channel widths (for multiple subbands);"
+    "see also --nchan, --freq0 : default is 50MHz"
+-f0    
+    default="700MHz"
+    help="Start frequency. Specify as val[unit]. E.g 700MHz, not unit => Hz ."
+    "Use a comma seperated list for multiple start frequencies "
+    "(for multiple subbands); see also --nchan, --dfreq: default is 700MHz",
+-nc
+    default="1"
+    help="Number of frequency channels. Specify as comma separated list "
+    "(for multiple subbands); see also --freq0, --dfreq: default is 1"
+-dt
+    default=10
+    help="Integration time in seconds : default is 10"
+-st
+    default=4,
+    help="Synthesis time in hours: default is 4.0"
+-os
+    help="Modify observation start time to maximise source visibility."
+-pl
+    default="XX XY YX YY".split()
+    help="Polarization : default is XX XY YX YY"
 """
 
 
