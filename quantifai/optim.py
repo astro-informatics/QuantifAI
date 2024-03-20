@@ -16,6 +16,7 @@ def FISTA_CRR_torch(
     alpha=1.0,
     lmbd=1.0,
     mu=1.0,
+    return_iter_num=False,
 ):
     """Runs the FISTA optimisation algorithm
 
@@ -32,6 +33,7 @@ def FISTA_CRR_torch(
         alpha (float): optimisation algorithm step-size
         lmbd (float): regularisation strength
         mu (float): CRR prior scaling parameter
+        return_iter_num (bool): return solution and the iteration number if True.
     """
 
     if prox_op is None:
@@ -86,6 +88,9 @@ def FISTA_CRR_torch(
                     res,
                 )
             )
+
+    if return_iter_num:
+        return x_hat, it
 
     return x_hat
 
