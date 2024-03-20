@@ -33,6 +33,10 @@ generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=8, direc
 ```
 
 Info about the parameters:
+-dir
+    default=[]
+    help="Pointing direction. Example J2000,0h0m0s,-30d0m0d. Option "
+    "--direction may be specified multiple times for multiple pointings",
 -df
     default="50MHz"
     help="Channel width. Specify as val[unit]. E.g 700MHz, not unit => Hz "
