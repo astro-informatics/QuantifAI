@@ -868,11 +868,11 @@ class L2Norm_torch(torch.nn.Module):
 
 class Wavelets_torch(torch.nn.Module):
     """
-    Constructs a linear operator for abstract Daubechies Wavelets
+    Constructs a linear operator for abstract Wavelets
     """
 
     def __init__(self, wav, levels, mode="periodic", shape=None):
-        """Initialises Daubechies Wavelet linear operator class
+        """Initialises Wavelet linear operator class
 
         Args:
 
