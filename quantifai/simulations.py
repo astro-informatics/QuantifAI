@@ -8,7 +8,7 @@ conda activate env_x86_py36
 
 # Install CASA software with pip
 # See https://casadocs.readthedocs.io/en/stable/notebooks/introduction.html#Modular-Packages
-# Be careful with the versions (the ones cited in teh docs are often incompatible)
+# Be careful with the versions (the ones cited in the docs are often incompatible)
 
 # Install simms package
 ``` bash
@@ -27,9 +27,9 @@ simms -dir J2000,13h18m54.86s,-15d36m04.25s -os -T meerkat -dt 240 -st 8 -nc 10 
 # or
 ``` python
 generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=1, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
-generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=2, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
-generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=4, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
-generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=8, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
+generate_random_empty_ms(msname='meerkat_simulation_2h', synthesis_time=2, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
+generate_random_empty_ms(msname='meerkat_simulation_4h', synthesis_time=4, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
+generate_random_empty_ms(msname='meerkat_simulation_8h', synthesis_time=8, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
 ```
 
 Info about the parameters:
