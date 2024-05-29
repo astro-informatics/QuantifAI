@@ -178,7 +178,7 @@ def max_eigenval(
         val (float): max eigenvalue of the AtA operator
     """
     with torch.no_grad():
-        x = torch.normal(mean=0, std=1, size=im_shape)[None][None].to(device)
+        x = torch.normal(mean=0, std=1, size=im_shape, device=device)
         x = x / torch.norm(torch.ravel(x), 2)
         init_val = 1
 

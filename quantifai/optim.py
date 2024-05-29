@@ -16,6 +16,7 @@ def FISTA_CRR_torch(
     alpha=1.0,
     lmbd=1.0,
     mu=1.0,
+    return_iter_num=False,
 ):
     """Runs the FISTA optimisation algorithm
 
@@ -32,6 +33,7 @@ def FISTA_CRR_torch(
         alpha (float): optimisation algorithm step-size
         lmbd (float): regularisation strength
         mu (float): CRR prior scaling parameter
+        return_iter_num (bool): return solution and the iteration number if True.
     """
 
     if prox_op is None:
@@ -54,9 +56,13 @@ def FISTA_CRR_torch(
     z = torch.clone(x_init)
     t = 1
 
+    im_shape = x_init.shape
+
     for it in range(options["iter"]):
         x_hat_old = torch.clone(x_hat)
-        x_hat = z - alpha * (likelihood.grad(z) + lmbd * CRR_model.grad(mu * z))
+        x_hat = z - alpha * (
+            likelihood.grad(z) + lmbd * CRR_model.grad(mu * z).reshape(im_shape)
+        )
         # Reality constraint
         x_hat = prox_op.prox(x_hat)
         # Positivity constraint
@@ -82,6 +88,9 @@ def FISTA_CRR_torch(
                     res,
                 )
             )
+
+    if return_iter_num:
+        return x_hat, it
 
     return x_hat
 

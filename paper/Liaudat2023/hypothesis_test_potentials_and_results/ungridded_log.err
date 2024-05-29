@@ -1,0 +1,40 @@
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+WARNING: The following header keyword is invalid or follows an unrecognized non-standard convention:
+INSTRUME                                                                         [astropy.io.fits.card]
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+WARNING: The following header keyword is invalid or follows an unrecognized non-standard convention:
+INSTRUME                                                                         [astropy.io.fits.card]
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+WARNING: The following header keyword is invalid or follows an unrecognized non-standard convention:
+INSTRUME                                                                         [astropy.io.fits.card]
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+WARNING: The following header keyword is invalid or follows an unrecognized non-standard convention:
+INSTRUME                                                                         [astropy.io.fits.card]
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(
+/disk/xray0/tl3/repos/QuantifAI/quantifai/utils.py:48: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(z, device=device, dtype=dtype, requires_grad=False).reshape(

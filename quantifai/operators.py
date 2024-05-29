@@ -4,6 +4,12 @@ import torch
 from quantifai.utils import max_eigenval
 from quantifai.empty import Identity
 import ptwt
+from scipy.special import iv, jv
+
+try:
+    import torchkbnufft as tkbn
+except ModuleNotFoundError:
+    print("torchkbnufft has not been installed, cannot use `KbNuFFT2d_torch`.")
 
 
 class MaskedFourier(object):
@@ -336,6 +342,379 @@ class MaskedFourier_torch(torch.nn.Module):
         return torch.fft.ifft2(x, norm=self.norm)
 
 
+class NUFFT2D_Torch(torch.nn.Module):
+    """NUFFT implementation using a Kaiser-Bessel kernel for interpolation.
+    Implemented with TF operations. Only able to do the FFT on the last 2 axes
+    of the tensors provided. Slower than using the numpy_function on the np
+    based operations.
+
+    Original credit to Matthijs Mars in https://github.com/astro-informatics/LeIA/
+    """
+
+    def __init__(self, device, myType=torch.float32, myComplexType=torch.complex64):
+        super().__init__()
+        self.myType = myType
+        self.myComplexType = myComplexType
+        self.device = device
+
+    def plan(self, uv, Nd=(256, 256), Kd=(512, 512), Jd=(6, 6), batch_size=1):
+        """Precompute kernels
+
+        Args:
+            uv (np.ndarray): uv visibilities positions. Array of size `(M,2)` where `M` is the number of visibilities.
+            Nd ((int, int)): intensity image size.
+            Kd ((int, int)): interpolation size. Up-sampling of 2x is typical (and hardcoded in the op)
+            Jd ((int, int)): size for gridding kernel.
+            batch_size (int): batch size used with the operator
+
+        """
+        # Checking the size until more flexibility is added
+        assert Nd[0] * 2 == Kd[0]
+        assert Nd[1] * 2 == Kd[1]
+
+        if Nd[0] != Nd[1]:
+            print(
+                "WARNING! This NuFFT2D operator is not working propely for non-squared images. Please use `qai.utils.KbNuFFT2d_torch`"
+            )
+
+        # saving some values
+        self.Nd = Nd
+        self.Kd = Kd
+        self.Jd = Jd
+        self.batch_size = batch_size
+        self.n_measurements = len(uv)
+
+        self.K_norm = max(Kd[0], Kd[1])
+        gridsize = 2 * np.pi / self.K_norm
+        k = (uv + np.pi) / gridsize
+
+        # calculating coefficients for interpolation
+        indices = []
+        values = []
+        for i in range(len(uv)):
+            ind, vals = self.calculate_kaiser_bessel_coef(k[i], i, Jd)
+            indices.append(ind)
+            values.append(vals.real)
+
+        values = np.array(values).reshape(-1)
+        indices = np.array(indices).reshape(-1, 4)
+
+        self.indices = indices
+        # check if indices are within bounds, otherwise suppress them and raise warning
+        if (
+            np.any(indices[:, 2:] < 0)
+            or np.any(indices[:, 2] >= Kd[0])
+            or np.any(indices[:, 3] >= Kd[1])
+        ):
+            sel_out_bounds = np.any(
+                [
+                    np.any(indices[:, 2:] < 0, axis=1),
+                    indices[:, 2] >= Kd[0],
+                    indices[:, 3] >= Kd[1],
+                ],
+                axis=0,
+            )
+            print(
+                f"some values lie out of the interpolation array, these are not used, check baselines"
+            )
+            indices[sel_out_bounds] = 0
+            values[sel_out_bounds] = 0
+
+        # repeating the values and indices to match the batch_size
+        batch_indices = np.tile(indices[:, -2:], [batch_size, 1])
+        batch_indicators = np.repeat(np.arange(batch_size), (len(values)))
+        batch_indices = np.hstack((batch_indicators[:, None], batch_indices))
+
+        self.flat_batch_indices = torch.tensor(
+            np.ravel_multi_index(batch_indices.T, (batch_size, Kd[0], Kd[1])),
+            dtype=torch.int64,
+            device=self.device,
+        )
+
+        self.batch_indices = list(torch.LongTensor(batch_indices).T)
+        self.batch_values = torch.tensor(
+            np.tile(values, [batch_size, 1])
+            .astype(np.float32)
+            .reshape(self.batch_size, self.n_measurements, self.Jd[0] * self.Jd[1]),
+            device=self.device,
+            dtype=self.myType,
+        )
+
+        # determine scaling based on iFT of the KB kernel
+        J = Jd[0]
+        beta = 2.34 * J
+        s_kb = lambda x: np.sinc(
+            np.sqrt((np.pi * x * J) ** 2 - (2.34 * J) ** 2 + 0j) / np.pi
+        )
+
+        xx_1 = (np.arange(Kd[0]) / Kd[0] - 0.5)[
+            (Kd[0] - Nd[0]) // 2 : (Kd[0] - Nd[0]) // 2 + Nd[0]
+        ]
+        xx_2 = (np.arange(Kd[1]) / Kd[1] - 0.5)[
+            (Kd[1] - Nd[1]) // 2 : (Kd[1] - Nd[1]) // 2 + Nd[1]
+        ]
+
+        sa_1 = s_kb(xx_1).real
+        sa_2 = s_kb(xx_2).real
+
+        self.scaling = (sa_1.reshape(-1, 1) * sa_2.reshape(1, -1)).reshape(
+            1, Nd[0], Nd[1]
+        )
+        self.scaling = torch.tensor(
+            self.scaling, device=self.device, dtype=self.myComplexType
+        )
+        self.forward = self.dir_op
+        self.adjoint = self.adj_op
+
+    @staticmethod
+    def calculate_kaiser_bessel_coef(k, i, Jd=(6, 6)):
+        """Calculate the Kaiser-Bessel kernel coefficients for a 2d grid for the neighbouring pixels.
+
+        Args:
+            k (float,float): location of the point to be interpolated
+            i (int): extra index parameter
+            Jd (tuple, optional): Amount of neighbouring pixels to be used in each direction. Defaults to (6,6).
+
+        Returns:
+            indices (list): list of indices of all the calculated coefficients
+            values (list): list of the calculated coefficients
+        """
+
+        k = k.reshape(-1, 1)
+        J = Jd[0] // 2
+        a = np.array(np.meshgrid(range(-J, J), range(-J, J))).reshape(2, -1)
+        a += k % 1 > 0.5  # corrects to the closest 6 pixels
+        indices = k.astype(int) + a
+
+        J = Jd[0]
+
+        beta = 2.34 * J
+        norm = J
+
+        # for 2d do the interpolation 2 times, once in each direction
+        u = k.reshape(2, 1) - indices
+        values1 = iv(0, beta * np.sqrt(1 + 0j - (2 * u[0] / Jd[0]) ** 2)).real / J
+        values2 = iv(0, beta * np.sqrt(1 + 0j - (2 * u[1] / Jd[0]) ** 2)).real / J
+        values = values1 * values2
+
+        indices = np.vstack(
+            (
+                np.zeros(indices.shape[1]),
+                np.repeat(i, indices.shape[1]),
+                indices[0],
+                indices[1],
+            )
+        ).astype(int)
+
+        return indices.T, values
+
+    def dir_op(self, xx):
+        xx = xx.to(copy=True, device=self.device, dtype=self.myComplexType)
+        xx = xx / self.scaling
+        xx = self._pad(xx)
+        kk = self._xx2kk(xx) / self.K_norm
+        k = self._kk2k(kk)
+        return k
+
+    def adj_op(self, k):
+        # split real and imaginary parts because complex operations not defined for sparseTensors
+
+        kk = self._k2kk(k)
+        xx = self._kk2xx(kk) * self.K_norm
+        xx = self._unpad(xx)
+        xx = xx / self.scaling
+
+        return xx
+
+    def _kk2k(self, kk):
+        """interpolates of the grid to non uniform measurements"""
+
+        return (
+            kk[self.batch_indices].reshape(
+                self.batch_size, self.n_measurements, self.Jd[0] * self.Jd[1]
+            )
+            * self.batch_values
+        ).sum(axis=-1)
+
+    def _k2kk(self, k):
+        """convolutes measurements to oversampled fft grid"""
+
+        interp = (
+            k.reshape(self.batch_size, self.n_measurements, 1) * self.batch_values
+        ).reshape(-1)
+
+        kk_flat = torch.zeros(
+            self.batch_size * self.Kd[0] * self.Kd[1],
+            device=self.device,
+            dtype=self.myComplexType,
+        )
+        kk_flat.scatter_add_(0, self.flat_batch_indices, interp)
+
+        return kk_flat.reshape(self.batch_size, self.Kd[0], self.Kd[1])
+
+    @staticmethod
+    def _kk2xx(kk):
+        """from 2d fourier space to 2d image space"""
+        return torch.fft.ifftshift(
+            torch.fft.ifft2(torch.fft.ifftshift(kk, dim=(-2, -1))), dim=(-2, -1)
+        )
+
+    @staticmethod
+    def _xx2kk(xx):
+        """from 2d fourier space to 2d image space"""
+        return torch.fft.fftshift(
+            torch.fft.fft2(torch.fft.fftshift(xx, dim=(-2, -1))), dim=(-2, -1)
+        )
+
+    def _pad(self, x):
+        """pads x to go from Nd to Kd"""
+        return torch.nn.functional.pad(
+            x,
+            (
+                (self.Kd[1] - self.Nd[1]) // 2,
+                (self.Kd[1] - self.Nd[1]) // 2,
+                (self.Kd[0] - self.Nd[0]) // 2,
+                (self.Kd[0] - self.Nd[0]) // 2,
+                0,
+                0,
+            ),
+        )
+
+    def _unpad(self, x):
+        """unpads x to go from  Kd to Nd"""
+        return x[
+            :,
+            (self.Kd[0] - self.Nd[0]) // 2 : (self.Kd[0] - self.Nd[0]) // 2
+            + self.Nd[0],
+            (self.Kd[1] - self.Nd[1]) // 2 : (self.Kd[1] - self.Nd[1]) // 2
+            + self.Nd[1],
+        ]
+
+
+class KbNuFFT2d_torch(torch.nn.Module):
+    """Alternative implementation of the NuFFT with Kaisser-Besel kernels.
+
+    Parameters
+    ----------
+    uv : torch.Tensor
+        uv plane with N measurements. Shape (2, N)
+    im_size : tuple
+        Size of image to reconstruct. Shape (n, m)
+    device : torch.device
+        Torch device.
+    interp_points : Union[int, Sequence[int]]
+        Number of neighbors to use for interpolation in each dimension.
+    k_oversampling :  Union[int, float]
+        Oversampling of the k space grid, should be between `1.25` and `2`. Usually set to `2`.
+    norm_type : str
+        Whether to apply normalization with the FFT operation. Options are ``"ortho"`` or ``None``.
+    myType : torch.dtype
+        Type for float numbers.
+    myComplexType : torch.dtype
+        Type for complex numbers.
+
+    """
+
+    def __init__(
+        self,
+        uv,
+        im_shape,
+        device,
+        interp_points=7,
+        k_oversampling=2,
+        norm_type="ortho",
+        myType=torch.float32,
+        myComplexType=torch.complex64,
+    ):
+        super().__init__()
+        assert len(uv.shape) == 2
+        assert len(im_shape) == 2
+        self.uv = uv
+        self.im_shape = im_shape
+        self.interp_points = interp_points
+        self.myType = myType
+        self.myComplexType = myComplexType
+        self.norm_type = norm_type
+        self.device = device
+
+        # Define oversampled grid
+        self.grid_size = (
+            int(self.im_shape[0] * k_oversampling),
+            int(self.im_shape[1] * k_oversampling),
+        )
+        # To be computed
+        self.norm = None
+
+        # Init interpolation matrix
+        self.init_interp_matrix()
+
+        # Initialise base operator layers
+        self.forwardOp = tkbn.KbNufft(
+            im_size=self.im_shape,
+            grid_size=self.grid_size,
+            numpoints=self.interp_points,
+            device=self.device,
+            dtype=self.myType,
+        )
+        self.adjointOp = tkbn.KbNufftAdjoint(
+            im_size=self.im_shape,
+            grid_size=self.grid_size,
+            numpoints=self.interp_points,
+            device=self.device,
+            dtype=self.myType,
+        )
+        # Compute norm
+        self.compute_norm()
+
+    def init_interp_matrix(self):
+        with torch.no_grad():
+            self.interp_mat = tkbn.calc_tensor_spmatrix(
+                self.uv,
+                im_size=self.im_shape,
+                grid_size=self.grid_size,
+                numpoints=self.interp_points,
+            )
+
+    def compute_norm(self):
+        """Compute operator norm"""
+        self.norm = max_eigenval(
+            A=self.dir_op,
+            At=self.adj_op,
+            im_shape=(1, 1) + self.im_shape,
+            tol=1e-4,
+            max_iter=np.int64(1e4),
+            verbose=0,
+            device=self.device,
+        )
+
+    def dir_op(self, x):
+        """Forward operator.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input image of shape (B, 1, H, W), as the channel dimension C should be 1.
+        """
+        return self.forwardOp(
+            image=x.to(self.myComplexType),
+            omega=self.uv,
+            interp_mats=self.interp_mat,
+            norm=self.norm_type,
+        )
+
+    def adj_op(self, k):
+        """Adjoint operator.
+
+        Parameters
+        ----------
+        k : torch.Tensor
+            Measurement set corresponding to the stored uv plane. Shape (B, 1, N).
+        """
+        return self.adjointOp(
+            data=k, omega=self.uv, interp_mats=self.interp_mat, norm=self.norm_type
+        )
+
+
 class L2Norm_torch(torch.nn.Module):
     """This class computes the gradient operator of the l2 norm function.
 
@@ -344,7 +723,7 @@ class L2Norm_torch(torch.nn.Module):
     When the input 'x' is an array. 'y' is a data vector, `sigma` is a scalar uncertainty
     """
 
-    def __init__(self, sigma, data, Phi=None):
+    def __init__(self, sigma, data, Phi=None, im_shape=None):
         """Initialises the l2_norm class
 
         Args:
@@ -352,6 +731,7 @@ class L2Norm_torch(torch.nn.Module):
             sigma (double): Noise standard deviation
             data (np.ndarray): Observed data
             Phi (Linear operator): Sensing operator
+            im_shape (tuple): shape of the x image
 
         Raises:
 
@@ -364,6 +744,12 @@ class L2Norm_torch(torch.nn.Module):
         # Set parameters and data
         self.sigma = sigma
         self.data = data
+
+        if im_shape is None:
+            self.im_shape = self.data.shape  # torch.squeeze(self.data).shape
+        else:
+            self.im_shape = im_shape
+
         if Phi is None:
             self.Phi = Identity()
             # Compute Lipschitz constant
@@ -386,7 +772,7 @@ class L2Norm_torch(torch.nn.Module):
         max_val = max_eigenval(
             A=A,
             At=At,
-            im_shape=torch.squeeze(self.data).shape,
+            im_shape=self.im_shape,
             tol=1e-4,
             max_iter=int(1e4),
             verbose=0,
@@ -482,22 +868,24 @@ class L2Norm_torch(torch.nn.Module):
 
 class Wavelets_torch(torch.nn.Module):
     """
-    Constructs a linear operator for abstract Daubechies Wavelets
+    Constructs a linear operator for abstract Wavelets
     """
 
-    def __init__(self, wav, levels, mode="periodic"):
-        """Initialises Daubechies Wavelet linear operator class
+    def __init__(self, wav, levels, mode="periodic", shape=None):
+        """Initialises Wavelet linear operator class
 
         Args:
 
             wav (string): Wavelet type (see https://tinyurl.com/5n7wzpmb)
             levels (int): Wavelet levels (scales) to consider
             mode (str): Wavelet signal extension mode
+            shape (tuple): image shape
 
         Raises:
 
             ValueError: Raised when levels are not positive definite
             ValueError: Raised if the wavelet type is not a string
+            ValueError: Raised if wavelet type is `self` and a shape is not provided
 
         """
         super().__init__()
@@ -509,7 +897,16 @@ class Wavelets_torch(torch.nn.Module):
         self.levels = np.int64(levels)
         self.mode = mode
 
-        self.adj_op(self.dir_op(torch.ones((1, 64, 64))))
+        if wav == "self":
+            self.shape = shape
+            if shape is None:
+                raise ValueError(
+                    "`self` wavelet type requires the shape of the images as input."
+                )
+
+            self.adj_op(self.dir_op(torch.ones(self.shape)))
+        else:
+            self.adj_op(self.dir_op(torch.ones((1, 64, 64))))
 
     def dir_op(self, x):
         """Evaluates the forward abstract wavelet transform of x
@@ -528,12 +925,17 @@ class Wavelets_torch(torch.nn.Module):
 
             ValueError: Raised when the shape of x is not even in every dimension
         """
-        if x.dim() >= 4:
-            return ptwt.wavedec2(
-                x.squeeze(1), wavelet=self.wav, level=self.levels, mode=self.mode
-            )
+        if self.wav == "self":
+            return torch.ravel(x)
         else:
-            return ptwt.wavedec2(x, wavelet=self.wav, level=self.levels, mode=self.mode)
+            if x.dim() >= 4:
+                return ptwt.wavedec2(
+                    x.squeeze(1), wavelet=self.wav, level=self.levels, mode=self.mode
+                )
+            else:
+                return ptwt.wavedec2(
+                    x, wavelet=self.wav, level=self.levels, mode=self.mode
+                )
 
     def adj_op(self, coeffs):
         """Evaluates the forward adjoint abstract wavelet transform of x
@@ -547,7 +949,10 @@ class Wavelets_torch(torch.nn.Module):
 
             img (torch.Tensor): reconstruted image.
         """
-        return ptwt.waverec2(coeffs, wavelet=self.wav).squeeze(1)
+        if self.wav == "self":
+            return torch.reshape(coeffs, self.shape)
+        else:
+            return ptwt.waverec2(coeffs, wavelet=self.wav).squeeze(1)
 
 
 class DictionaryWv_torch(torch.nn.Module):
@@ -555,7 +960,7 @@ class DictionaryWv_torch(torch.nn.Module):
     Constructs class to permit sparsity averaging across a collection of wavelet dictionaries
     """
 
-    def __init__(self, wavs, levels, mode="periodic"):
+    def __init__(self, wavs, levels, mode="periodic", shape=None):
         """Initialises a linear operator for a collection of abstract wavelet dictionaries
 
         Args:
@@ -563,6 +968,7 @@ class DictionaryWv_torch(torch.nn.Module):
             wavs (list[string]): List of wavelet types (see https://tinyurl.com/5n7wzpmb)
             levels (list[int]): Wavelet levels (scales) to consider
             mode (str): Wavelet signal extension mode shared by all dictionaries
+            shape (tuple): image shape
 
         Raises:
 
@@ -574,11 +980,12 @@ class DictionaryWv_torch(torch.nn.Module):
         self.mode = mode
         self.wavs = wavs
         self.levels = levels
+        self.shape = shape
         if np.isscalar(levels):
             self.levels = np.ones(len(self.wavs)) * levels
         for i in range(len(self.wavs)):
             self.wavelet_list.append(
-                Wavelets_torch(self.wavs[i], self.levels[i], self.mode)
+                Wavelets_torch(self.wavs[i], self.levels[i], self.mode, self.shape)
             )
 
     def dir_op(self, x):
@@ -657,11 +1064,17 @@ class L1Norm_torch(torch.nn.Module):
         """Applies operation to all coefficients in ptwt structure."""
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            coeffs[wav_i][0] = op(coeffs[wav_i][0])
-            # Iterate over the wavelet decomp and apply op
-            for it1 in range(1, len(coeffs[0])):
-                coeffs[wav_i][it1] = tuple([op(elem) for elem in coeffs[wav_i][it1]])
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                coeffs[wav_i] = op(coeffs[wav_i])
+            else:
+                # Apply op over the low freq approx
+                coeffs[wav_i][0] = op(coeffs[wav_i][0])
+                # Iterate over the wavelet decomp and apply op
+                for it1 in range(1, len(coeffs[0])):
+                    coeffs[wav_i][it1] = tuple(
+                        [op(elem) for elem in coeffs[wav_i][it1]]
+                    )
 
         return coeffs
 
@@ -685,18 +1098,22 @@ class L1Norm_torch(torch.nn.Module):
         """
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
-            # Iterate over the wavelet decomp and apply op
-            for it1 in range(1, len(coeffs1[0])):
-                coeffs1[wav_i][it1] = tuple(
-                    [
-                        op(elem1, elem2)
-                        for elem1, elem2 in zip(
-                            coeffs1[wav_i][it1], coeffs2[wav_i][it1]
-                        )
-                    ]
-                )
+            if torch.is_tensor(coeffs1[wav_i]) or torch.is_tensor(coeffs2[wav_i]):
+                # case of `self` wavelets
+                coeffs1[wav_i] = op(coeffs1[wav_i], coeffs2[wav_i])
+            else:
+                # Apply op over the low freq approx
+                coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+                # Iterate over the wavelet decomp and apply op
+                for it1 in range(1, len(coeffs1[0])):
+                    coeffs1[wav_i][it1] = tuple(
+                        [
+                            op(elem1, elem2)
+                            for elem1, elem2 in zip(
+                                coeffs1[wav_i][it1], coeffs2[wav_i][it1]
+                            )
+                        ]
+                    )
         return coeffs1
 
     def _get_max_abs_coeffs(self, coeffs):
@@ -714,12 +1131,16 @@ class L1Norm_torch(torch.nn.Module):
         max_val = []
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
-            # Iterate over the wavelet decompositions
-            for it1 in range(1, len(coeffs[0])):
-                for it2 in range(len(coeffs[wav_i][it1])):
-                    max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                max_val.append(torch.max(torch.abs(coeffs[wav_i])))
+            else:
+                # Apply op over the low freq approx
+                max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
+                # Iterate over the wavelet decompositions
+                for it1 in range(1, len(coeffs[0])):
+                    for it2 in range(len(coeffs[wav_i][it1])):
+                        max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
 
         # Apply operation to the coefficients
         return torch.max(torch.tensor(max_val)).item()
@@ -757,12 +1178,16 @@ class L1Norm_torch(torch.nn.Module):
         loss = 0
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            loss += self._fun(coeffs[wav_i][0])
-            # Iterate over the wavelet decompositions
-            for it1 in range(1, len(coeffs[0])):
-                for it2 in range(len(coeffs[wav_i][it1])):
-                    loss += self._fun(coeffs[wav_i][it1][it2])
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                loss += self._fun(coeffs[wav_i])
+            else:
+                # Apply op over the low freq approx
+                loss += self._fun(coeffs[wav_i][0])
+                # Iterate over the wavelet decompositions
+                for it1 in range(1, len(coeffs[0])):
+                    for it2 in range(len(coeffs[wav_i][it1])):
+                        loss += self._fun(coeffs[wav_i][it1][it2])
 
         # Apply operation to the coefficients
         return loss
@@ -933,11 +1358,17 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         """Applies operation to all coefficients in ptwt structure."""
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            coeffs[wav_i][0] = op(coeffs[wav_i][0])
-            # Iterate over the wavelet decomp and apply op
-            for it1 in range(1, len(coeffs[0])):
-                coeffs[wav_i][it1] = tuple([op(elem) for elem in coeffs[wav_i][it1]])
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                coeffs[wav_i] = op(coeffs[wav_i])
+            else:
+                # Apply op over the low freq approx
+                coeffs[wav_i][0] = op(coeffs[wav_i][0])
+                # Iterate over the wavelet decomp and apply op
+                for it1 in range(1, len(coeffs[0])):
+                    coeffs[wav_i][it1] = tuple(
+                        [op(elem) for elem in coeffs[wav_i][it1]]
+                    )
 
         return coeffs
 
@@ -952,18 +1383,23 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         else:
             # Iterate over the wavelet dictionaries
             for wav_i in range(self.num_wavs):
-                if level == 0:
-                    # Apply op over the low freq approx
-                    coeffs[wav_i][0] = op(coeffs[wav_i][0])
-                elif level > 0 and level <= len(coeffs[0]):
-                    # Apply op to specific level
-                    coeffs[wav_i][level] = tuple(
-                        [op(elem) for elem in coeffs[wav_i][level]]
-                    )
+                if torch.is_tensor(coeffs[wav_i]):
+                    # case of `self` wavelets
+                    # `self` wavelets do not have levels
+                    coeffs[wav_i] = op(coeffs[wav_i])
                 else:
-                    raise ValueError(
-                        "The level requested is higher than the one used in the wavelet decomposition."
-                    )
+                    if level == 0:
+                        # Apply op over the low freq approx
+                        coeffs[wav_i][0] = op(coeffs[wav_i][0])
+                    elif level > 0 and level <= len(coeffs[0]):
+                        # Apply op to specific level
+                        coeffs[wav_i][level] = tuple(
+                            [op(elem) for elem in coeffs[wav_i][level]]
+                        )
+                    else:
+                        raise ValueError(
+                            "The level requested is higher than the one used in the wavelet decomposition."
+                        )
 
         return coeffs
 
@@ -987,18 +1423,22 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         """
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
-            # Iterate over the wavelet decomp and apply op
-            for it1 in range(1, len(coeffs1[0])):
-                coeffs1[wav_i][it1] = tuple(
-                    [
-                        op(elem1, elem2)
-                        for elem1, elem2 in zip(
-                            coeffs1[wav_i][it1], coeffs2[wav_i][it1]
-                        )
-                    ]
-                )
+            if torch.is_tensor(coeffs1[wav_i]) or torch.is_tensor(coeffs2[wav_i]):
+                # case of `self` wavelets
+                coeffs1[wav_i] = op(coeffs1[wav_i], coeffs2[wav_i])
+            else:
+                # Apply op over the low freq approx
+                coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+                # Iterate over the wavelet decomp and apply op
+                for it1 in range(1, len(coeffs1[0])):
+                    coeffs1[wav_i][it1] = tuple(
+                        [
+                            op(elem1, elem2)
+                            for elem1, elem2 in zip(
+                                coeffs1[wav_i][it1], coeffs2[wav_i][it1]
+                            )
+                        ]
+                    )
         return coeffs1
 
     def _op_to_two_coeffs_at_level(self, coeffs1, coeffs2, level, op):
@@ -1026,19 +1466,23 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         else:
             # Iterate over the wavelet dictionaries
             for wav_i in range(self.num_wavs):
-                if level == 0:
-                    # Apply op over the low freq approx
-                    coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
-                elif level > 0 and level <= len(coeffs1[0]):
-                    # Apply op to specific level
-                    coeffs1[wav_i][level] = tuple(
-                        [
-                            op(elem1, elem2)
-                            for elem1, elem2 in zip(
-                                coeffs1[wav_i][level], coeffs2[wav_i][level]
-                            )
-                        ]
-                    )
+                if torch.is_tensor(coeffs1[wav_i]) or torch.is_tensor(coeffs2[wav_i]):
+                    # case of `self` wavelets
+                    coeffs1[wav_i] = op(coeffs1[wav_i], coeffs2[wav_i])
+                else:
+                    if level == 0:
+                        # Apply op over the low freq approx
+                        coeffs1[wav_i][0] = op(coeffs1[wav_i][0], coeffs2[wav_i][0])
+                    elif level > 0 and level <= len(coeffs1[0]):
+                        # Apply op to specific level
+                        coeffs1[wav_i][level] = tuple(
+                            [
+                                op(elem1, elem2)
+                                for elem1, elem2 in zip(
+                                    coeffs1[wav_i][level], coeffs2[wav_i][level]
+                                )
+                            ]
+                        )
 
         return coeffs1
 
@@ -1057,12 +1501,16 @@ class Operation2WaveletCoeffs_torch(torch.nn.Module):
         max_val = []
         # Iterate over the wavelet dictionaries
         for wav_i in range(self.num_wavs):
-            # Apply op over the low freq approx
-            max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
-            # Iterate over the wavelet decompositions
-            for it1 in range(1, len(coeffs[0])):
-                for it2 in range(len(coeffs[wav_i][it1])):
-                    max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
+            if torch.is_tensor(coeffs[wav_i]):
+                # case of `self` wavelets
+                max_val.append(torch.max(torch.abs(coeffs[wav_i])))
+            else:
+                # Apply op over the low freq approx
+                max_val.append(torch.max(torch.abs((coeffs[wav_i][0]))))
+                # Iterate over the wavelet decompositions
+                for it1 in range(1, len(coeffs[0])):
+                    for it2 in range(len(coeffs[wav_i][it1])):
+                        max_val.append(torch.max(torch.abs((coeffs[wav_i][it1][it2]))))
 
         # Apply operation to the coefficients
         return torch.max(torch.tensor(max_val)).item()
