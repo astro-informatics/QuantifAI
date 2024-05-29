@@ -1,0 +1,1231 @@
+True
+1
+0
+NVIDIA A100-PCIE-40GB
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.108669
+[GD] 100 out of 15000 iterations, tol = 0.002307
+[GD] 200 out of 15000 iterations, tol = 0.001246
+[GD] 300 out of 15000 iterations, tol = 0.000647
+[GD] 400 out of 15000 iterations, tol = 0.000372
+[GD] 500 out of 15000 iterations, tol = 0.000256
+[GD] 600 out of 15000 iterations, tol = 0.000183
+[GD] 700 out of 15000 iterations, tol = 0.000142
+[GD] 800 out of 15000 iterations, tol = 0.000111
+[GD] 900 out of 15000 iterations, tol = 0.000096
+[GD] 1000 out of 15000 iterations, tol = 0.000067
+[GD] 1100 out of 15000 iterations, tol = 0.000067
+[GD] 1200 out of 15000 iterations, tol = 0.000055
+[GD] 1300 out of 15000 iterations, tol = 0.000046
+[GD] 1400 out of 15000 iterations, tol = 0.000040
+[GD] 1500 out of 15000 iterations, tol = 0.000038
+[GD] 1600 out of 15000 iterations, tol = 0.000031
+[GD] 1700 out of 15000 iterations, tol = 0.000029
+[GD] 1800 out of 15000 iterations, tol = 0.000026
+[GD] 1900 out of 15000 iterations, tol = 0.000023
+[GD] 2000 out of 15000 iterations, tol = 0.000023
+[GD] 2100 out of 15000 iterations, tol = 0.000019
+[GD] 2200 out of 15000 iterations, tol = 0.000018
+[GD] 2300 out of 15000 iterations, tol = 0.000018
+[GD] 2400 out of 15000 iterations, tol = 0.000016
+[GD] 2500 out of 15000 iterations, tol = 0.000015
+[GD] 2600 out of 15000 iterations, tol = 0.000015
+[GD] 2700 out of 15000 iterations, tol = 0.000013
+[GD] 2800 out of 15000 iterations, tol = 0.000013
+[GD] 2900 out of 15000 iterations, tol = 0.000012
+[GD] 3000 out of 15000 iterations, tol = 0.000012
+[GD] 3100 out of 15000 iterations, tol = 0.000011
+[GD] 3200 out of 15000 iterations, tol = 0.000011
+[GD] converged in 3241 iterations
+CYN  PSNR:  60.561984036738
+CYN  SNR:  25.72
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  30  iterations to converge.
+selected_thresh:  0.04180908203125
+gamma_alpha:  147959.8540545503
+MAP image:  13429.28515625
+thresholded image:  768252.875
+SNR (thresh vs MAP) at lvl 0: 17.170000
+SNR (MAP vs GT) at lvl 0: 36.150000
+SNR (thresh vs MAP) at lvl 1: 22.100000
+SNR (MAP vs GT) at lvl 1: 37.050000
+SNR (thresh vs MAP) at lvl 2: 20.950000
+SNR (MAP vs GT) at lvl 2: 32.910000
+SNR (thresh vs MAP) at lvl 3: 21.640000
+SNR (MAP vs GT) at lvl 3: 30.530000
+SNR (thresh vs MAP) at lvl 4: 26.630000
+SNR (MAP vs GT) at lvl 4: 30.750000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.059699
+[GD] 100 out of 15000 iterations, tol = 0.003548
+[GD] 200 out of 15000 iterations, tol = 0.001118
+[GD] 300 out of 15000 iterations, tol = 0.000507
+[GD] 400 out of 15000 iterations, tol = 0.000283
+[GD] 500 out of 15000 iterations, tol = 0.000193
+[GD] 600 out of 15000 iterations, tol = 0.000139
+[GD] 700 out of 15000 iterations, tol = 0.000100
+[GD] 800 out of 15000 iterations, tol = 0.000083
+[GD] 900 out of 15000 iterations, tol = 0.000063
+[GD] 1000 out of 15000 iterations, tol = 0.000053
+[GD] 1100 out of 15000 iterations, tol = 0.000045
+[GD] 1200 out of 15000 iterations, tol = 0.000037
+[GD] 1300 out of 15000 iterations, tol = 0.000033
+[GD] 1400 out of 15000 iterations, tol = 0.000027
+[GD] 1500 out of 15000 iterations, tol = 0.000026
+[GD] 1600 out of 15000 iterations, tol = 0.000020
+[GD] 1700 out of 15000 iterations, tol = 0.000021
+[GD] 1800 out of 15000 iterations, tol = 0.000018
+[GD] 1900 out of 15000 iterations, tol = 0.000016
+[GD] 2000 out of 15000 iterations, tol = 0.000015
+[GD] 2100 out of 15000 iterations, tol = 0.000014
+[GD] 2200 out of 15000 iterations, tol = 0.000013
+[GD] 2300 out of 15000 iterations, tol = 0.000012
+[GD] 2400 out of 15000 iterations, tol = 0.000011
+[GD] 2500 out of 15000 iterations, tol = 0.000011
+[GD] converged in 2586 iterations
+CYN  PSNR:  62.6794562857166
+CYN  SNR:  27.84
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  30  iterations to converge.
+selected_thresh:  0.03936767578125
+gamma_alpha:  162257.3345233003
+MAP image:  27726.765625
+thresholded image:  620289.25
+SNR (thresh vs MAP) at lvl 0: 17.440000
+SNR (MAP vs GT) at lvl 0: 49.990000
+SNR (thresh vs MAP) at lvl 1: 22.620000
+SNR (MAP vs GT) at lvl 1: 43.590000
+SNR (thresh vs MAP) at lvl 2: 21.330000
+SNR (MAP vs GT) at lvl 2: 35.330000
+SNR (thresh vs MAP) at lvl 3: 21.790000
+SNR (MAP vs GT) at lvl 3: 31.900000
+SNR (thresh vs MAP) at lvl 4: 26.030000
+SNR (MAP vs GT) at lvl 4: 31.850000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.106706
+[GD] 100 out of 15000 iterations, tol = 0.001876
+[GD] 200 out of 15000 iterations, tol = 0.000592
+[GD] 300 out of 15000 iterations, tol = 0.000269
+[GD] 400 out of 15000 iterations, tol = 0.000165
+[GD] 500 out of 15000 iterations, tol = 0.000108
+[GD] 600 out of 15000 iterations, tol = 0.000080
+[GD] 700 out of 15000 iterations, tol = 0.000059
+[GD] 800 out of 15000 iterations, tol = 0.000046
+[GD] 900 out of 15000 iterations, tol = 0.000037
+[GD] 1000 out of 15000 iterations, tol = 0.000032
+[GD] 1100 out of 15000 iterations, tol = 0.000025
+[GD] 1200 out of 15000 iterations, tol = 0.000021
+[GD] 1300 out of 15000 iterations, tol = 0.000019
+[GD] 1400 out of 15000 iterations, tol = 0.000016
+[GD] 1500 out of 15000 iterations, tol = 0.000015
+[GD] 1600 out of 15000 iterations, tol = 0.000012
+[GD] 1700 out of 15000 iterations, tol = 0.000012
+[GD] 1800 out of 15000 iterations, tol = 0.000011
+[GD] converged in 1843 iterations
+CYN  PSNR:  63.24209823477378
+CYN  SNR:  28.4
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  30  iterations to converge.
+selected_thresh:  0.03265380859375
+gamma_alpha:  191630.7290545503
+MAP image:  57100.16015625
+thresholded image:  1431353.25
+SNR (thresh vs MAP) at lvl 0: 19.020000
+SNR (MAP vs GT) at lvl 0: 54.940000
+SNR (thresh vs MAP) at lvl 1: 23.840000
+SNR (MAP vs GT) at lvl 1: 48.470000
+SNR (thresh vs MAP) at lvl 2: 22.430000
+SNR (MAP vs GT) at lvl 2: 37.050000
+SNR (thresh vs MAP) at lvl 3: 22.560000
+SNR (MAP vs GT) at lvl 3: 32.290000
+SNR (thresh vs MAP) at lvl 4: 26.200000
+SNR (MAP vs GT) at lvl 4: 31.930000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.112273
+[GD] 100 out of 15000 iterations, tol = 0.001839
+[GD] 200 out of 15000 iterations, tol = 0.000404
+[GD] 300 out of 15000 iterations, tol = 0.000179
+[GD] 400 out of 15000 iterations, tol = 0.000104
+[GD] 500 out of 15000 iterations, tol = 0.000071
+[GD] 600 out of 15000 iterations, tol = 0.000046
+[GD] 700 out of 15000 iterations, tol = 0.000036
+[GD] 800 out of 15000 iterations, tol = 0.000028
+[GD] 900 out of 15000 iterations, tol = 0.000021
+[GD] 1000 out of 15000 iterations, tol = 0.000018
+[GD] 1100 out of 15000 iterations, tol = 0.000015
+[GD] 1200 out of 15000 iterations, tol = 0.000012
+[GD] 1300 out of 15000 iterations, tol = 0.000011
+[GD] converged in 1346 iterations
+CYN  PSNR:  63.57730648061466
+CYN  SNR:  28.74
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  32  iterations to converge.
+selected_thresh:  0.019989013671875
+gamma_alpha:  250544.0767108003
+MAP image:  116013.5078125
+thresholded image:  1201392.5
+SNR (thresh vs MAP) at lvl 0: 23.260000
+SNR (MAP vs GT) at lvl 0: 58.520000
+SNR (thresh vs MAP) at lvl 1: 26.960000
+SNR (MAP vs GT) at lvl 1: 51.570000
+SNR (thresh vs MAP) at lvl 2: 25.370000
+SNR (MAP vs GT) at lvl 2: 39.790000
+SNR (thresh vs MAP) at lvl 3: 24.950000
+SNR (MAP vs GT) at lvl 3: 32.740000
+SNR (thresh vs MAP) at lvl 4: 27.330000
+SNR (MAP vs GT) at lvl 4: 31.590000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.114393
+[GD] 100 out of 15000 iterations, tol = 0.001989
+[GD] 200 out of 15000 iterations, tol = 0.000599
+[GD] 300 out of 15000 iterations, tol = 0.000279
+[GD] 400 out of 15000 iterations, tol = 0.000171
+[GD] 500 out of 15000 iterations, tol = 0.000112
+[GD] 600 out of 15000 iterations, tol = 0.000074
+[GD] 700 out of 15000 iterations, tol = 0.000052
+[GD] 800 out of 15000 iterations, tol = 0.000038
+[GD] 900 out of 15000 iterations, tol = 0.000035
+[GD] 1000 out of 15000 iterations, tol = 0.000030
+[GD] 1100 out of 15000 iterations, tol = 0.000024
+[GD] 1200 out of 15000 iterations, tol = 0.000018
+[GD] 1300 out of 15000 iterations, tol = 0.000015
+[GD] 1400 out of 15000 iterations, tol = 0.000013
+[GD] 1500 out of 15000 iterations, tol = 0.000013
+[GD] 1600 out of 15000 iterations, tol = 0.000012
+[GD] converged in 1644 iterations
+M31  PSNR:  47.72893064576767
+M31  SNR:  25.29
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  26  iterations to converge.
+selected_thresh:  0.123291015625
+gamma_alpha:  87918.56970868903
+MAP image:  19936.9921875
+thresholded image:  293558.4375
+SNR (thresh vs MAP) at lvl 0: 24.240000
+SNR (MAP vs GT) at lvl 0: 49.960000
+SNR (thresh vs MAP) at lvl 1: 20.540000
+SNR (MAP vs GT) at lvl 1: 42.510000
+SNR (thresh vs MAP) at lvl 2: 19.220000
+SNR (MAP vs GT) at lvl 2: 28.470000
+SNR (thresh vs MAP) at lvl 3: 22.960000
+SNR (MAP vs GT) at lvl 3: 29.260000
+SNR (thresh vs MAP) at lvl 4: 38.690000
+SNR (MAP vs GT) at lvl 4: 35.450000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.110317
+[GD] 100 out of 15000 iterations, tol = 0.002102
+[GD] 200 out of 15000 iterations, tol = 0.000556
+[GD] 300 out of 15000 iterations, tol = 0.000214
+[GD] 400 out of 15000 iterations, tol = 0.000135
+[GD] 500 out of 15000 iterations, tol = 0.000081
+[GD] 600 out of 15000 iterations, tol = 0.000059
+[GD] 700 out of 15000 iterations, tol = 0.000040
+[GD] 800 out of 15000 iterations, tol = 0.000032
+[GD] 900 out of 15000 iterations, tol = 0.000024
+[GD] 1000 out of 15000 iterations, tol = 0.000021
+[GD] 1100 out of 15000 iterations, tol = 0.000015
+[GD] 1200 out of 15000 iterations, tol = 0.000014
+[GD] 1300 out of 15000 iterations, tol = 0.000012
+[GD] 1400 out of 15000 iterations, tol = 0.000011
+[GD] converged in 1458 iterations
+M31  PSNR:  50.82475416004691
+M31  SNR:  28.39
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  28  iterations to converge.
+selected_thresh:  0.0738525390625
+gamma_alpha:  105403.73767743903
+MAP image:  37422.16015625
+thresholded image:  298956.78125
+SNR (thresh vs MAP) at lvl 0: 28.070000
+SNR (MAP vs GT) at lvl 0: 55.190000
+SNR (thresh vs MAP) at lvl 1: 24.050000
+SNR (MAP vs GT) at lvl 1: 47.400000
+SNR (thresh vs MAP) at lvl 2: 21.930000
+SNR (MAP vs GT) at lvl 2: 32.730000
+SNR (thresh vs MAP) at lvl 3: 24.000000
+SNR (MAP vs GT) at lvl 3: 31.900000
+SNR (thresh vs MAP) at lvl 4: 38.270000
+SNR (MAP vs GT) at lvl 4: 36.030000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.112946
+[GD] 100 out of 15000 iterations, tol = 0.002087
+[GD] 200 out of 15000 iterations, tol = 0.000690
+[GD] 300 out of 15000 iterations, tol = 0.000319
+[GD] 400 out of 15000 iterations, tol = 0.000173
+[GD] 500 out of 15000 iterations, tol = 0.000111
+[GD] 600 out of 15000 iterations, tol = 0.000071
+[GD] 700 out of 15000 iterations, tol = 0.000052
+[GD] 800 out of 15000 iterations, tol = 0.000040
+[GD] 900 out of 15000 iterations, tol = 0.000031
+[GD] 1000 out of 15000 iterations, tol = 0.000024
+[GD] 1100 out of 15000 iterations, tol = 0.000018
+[GD] 1200 out of 15000 iterations, tol = 0.000016
+[GD] 1300 out of 15000 iterations, tol = 0.000014
+[GD] 1400 out of 15000 iterations, tol = 0.000011
+[GD] 1500 out of 15000 iterations, tol = 0.000010
+[GD] converged in 1503 iterations
+M31  PSNR:  54.37520232458883
+M31  SNR:  31.94
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  30  iterations to converge.
+selected_thresh:  0.05157470703125
+gamma_alpha:  138605.49939618903
+MAP image:  70623.921875
+thresholded image:  410812.4375
+SNR (thresh vs MAP) at lvl 0: 30.840000
+SNR (MAP vs GT) at lvl 0: 58.180000
+SNR (thresh vs MAP) at lvl 1: 26.610000
+SNR (MAP vs GT) at lvl 1: 52.320000
+SNR (thresh vs MAP) at lvl 2: 24.000000
+SNR (MAP vs GT) at lvl 2: 39.550000
+SNR (thresh vs MAP) at lvl 3: 25.010000
+SNR (MAP vs GT) at lvl 3: 35.040000
+SNR (thresh vs MAP) at lvl 4: 37.580000
+SNR (MAP vs GT) at lvl 4: 36.800000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.130313
+[GD] 100 out of 15000 iterations, tol = 0.002714
+[GD] 200 out of 15000 iterations, tol = 0.000908
+[GD] 300 out of 15000 iterations, tol = 0.000412
+[GD] 400 out of 15000 iterations, tol = 0.000218
+[GD] 500 out of 15000 iterations, tol = 0.000130
+[GD] 600 out of 15000 iterations, tol = 0.000089
+[GD] 700 out of 15000 iterations, tol = 0.000064
+[GD] 800 out of 15000 iterations, tol = 0.000046
+[GD] 900 out of 15000 iterations, tol = 0.000037
+[GD] 1000 out of 15000 iterations, tol = 0.000029
+[GD] 1100 out of 15000 iterations, tol = 0.000024
+[GD] 1200 out of 15000 iterations, tol = 0.000019
+[GD] 1300 out of 15000 iterations, tol = 0.000015
+[GD] 1400 out of 15000 iterations, tol = 0.000013
+[GD] 1500 out of 15000 iterations, tol = 0.000011
+[GD] converged in 1557 iterations
+M31  PSNR:  56.8581611836799
+M31  SNR:  34.42
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  30  iterations to converge.
+selected_thresh:  0.03509521484375
+gamma_alpha:  201055.04627118903
+MAP image:  133073.46875
+thresholded image:  509585.25
+SNR (thresh vs MAP) at lvl 0: 33.840000
+SNR (MAP vs GT) at lvl 0: 62.010000
+SNR (thresh vs MAP) at lvl 1: 29.490000
+SNR (MAP vs GT) at lvl 1: 54.960000
+SNR (thresh vs MAP) at lvl 2: 26.450000
+SNR (MAP vs GT) at lvl 2: 44.510000
+SNR (thresh vs MAP) at lvl 3: 26.410000
+SNR (MAP vs GT) at lvl 3: 38.210000
+SNR (thresh vs MAP) at lvl 4: 36.810000
+SNR (MAP vs GT) at lvl 4: 37.660000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.105195
+[GD] 100 out of 15000 iterations, tol = 0.001670
+[GD] 200 out of 15000 iterations, tol = 0.000392
+[GD] 300 out of 15000 iterations, tol = 0.000211
+[GD] 400 out of 15000 iterations, tol = 0.000130
+[GD] 500 out of 15000 iterations, tol = 0.000074
+[GD] 600 out of 15000 iterations, tol = 0.000046
+[GD] 700 out of 15000 iterations, tol = 0.000038
+[GD] 800 out of 15000 iterations, tol = 0.000032
+[GD] 900 out of 15000 iterations, tol = 0.000024
+[GD] 1000 out of 15000 iterations, tol = 0.000016
+[GD] 1100 out of 15000 iterations, tol = 0.000015
+[GD] 1200 out of 15000 iterations, tol = 0.000014
+[GD] 1300 out of 15000 iterations, tol = 0.000011
+[GD] converged in 1365 iterations
+3c288  PSNR:  47.70238079285748
+3c288  SNR:  25.01
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  26  iterations to converge.
+selected_thresh:  0.150146484375
+gamma_alpha:  86766.23963056403
+MAP image:  18784.662109375
+thresholded image:  500626.71875
+SNR (thresh vs MAP) at lvl 0: 17.860000
+SNR (MAP vs GT) at lvl 0: 45.450000
+SNR (thresh vs MAP) at lvl 1: 20.760000
+SNR (MAP vs GT) at lvl 1: 40.910000
+SNR (thresh vs MAP) at lvl 2: 20.380000
+SNR (MAP vs GT) at lvl 2: 28.700000
+SNR (thresh vs MAP) at lvl 3: 25.320000
+SNR (MAP vs GT) at lvl 3: 28.160000
+SNR (thresh vs MAP) at lvl 4: 39.220000
+SNR (MAP vs GT) at lvl 4: 37.720000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.103392
+[GD] 100 out of 15000 iterations, tol = 0.001341
+[GD] 200 out of 15000 iterations, tol = 0.000332
+[GD] 300 out of 15000 iterations, tol = 0.000146
+[GD] 400 out of 15000 iterations, tol = 0.000086
+[GD] 500 out of 15000 iterations, tol = 0.000054
+[GD] 600 out of 15000 iterations, tol = 0.000036
+[GD] 700 out of 15000 iterations, tol = 0.000027
+[GD] 800 out of 15000 iterations, tol = 0.000019
+[GD] 900 out of 15000 iterations, tol = 0.000015
+[GD] 1000 out of 15000 iterations, tol = 0.000012
+[GD] converged in 1099 iterations
+3c288  PSNR:  49.689656465072375
+3c288  SNR:  27.0
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  28  iterations to converge.
+selected_thresh:  0.0677490234375
+gamma_alpha:  104107.63220868903
+MAP image:  36126.0546875
+thresholded image:  300943.78125
+SNR (thresh vs MAP) at lvl 0: 24.730000
+SNR (MAP vs GT) at lvl 0: 53.840000
+SNR (thresh vs MAP) at lvl 1: 25.520000
+SNR (MAP vs GT) at lvl 1: 46.040000
+SNR (thresh vs MAP) at lvl 2: 23.810000
+SNR (MAP vs GT) at lvl 2: 31.410000
+SNR (thresh vs MAP) at lvl 3: 26.890000
+SNR (MAP vs GT) at lvl 3: 29.610000
+SNR (thresh vs MAP) at lvl 4: 37.810000
+SNR (MAP vs GT) at lvl 4: 38.200000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.102692
+[GD] 100 out of 15000 iterations, tol = 0.001321
+[GD] 200 out of 15000 iterations, tol = 0.000305
+[GD] 300 out of 15000 iterations, tol = 0.000128
+[GD] 400 out of 15000 iterations, tol = 0.000078
+[GD] 500 out of 15000 iterations, tol = 0.000046
+[GD] 600 out of 15000 iterations, tol = 0.000032
+[GD] 700 out of 15000 iterations, tol = 0.000024
+[GD] 800 out of 15000 iterations, tol = 0.000016
+[GD] 900 out of 15000 iterations, tol = 0.000015
+[GD] converged in 988 iterations
+3c288  PSNR:  52.315058909165515
+3c288  SNR:  29.62
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  32  iterations to converge.
+selected_thresh:  0.030364990234375
+gamma_alpha:  137509.64002118903
+MAP image:  69528.0625
+thresholded image:  266958.96875
+SNR (thresh vs MAP) at lvl 0: 31.630000
+SNR (MAP vs GT) at lvl 0: 57.330000
+SNR (thresh vs MAP) at lvl 1: 30.110000
+SNR (MAP vs GT) at lvl 1: 51.000000
+SNR (thresh vs MAP) at lvl 2: 26.910000
+SNR (MAP vs GT) at lvl 2: 35.430000
+SNR (thresh vs MAP) at lvl 3: 28.010000
+SNR (MAP vs GT) at lvl 3: 31.800000
+SNR (thresh vs MAP) at lvl 4: 37.790000
+SNR (MAP vs GT) at lvl 4: 38.680000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.111293
+[GD] 100 out of 15000 iterations, tol = 0.001643
+[GD] 200 out of 15000 iterations, tol = 0.000348
+[GD] 300 out of 15000 iterations, tol = 0.000147
+[GD] 400 out of 15000 iterations, tol = 0.000076
+[GD] 500 out of 15000 iterations, tol = 0.000045
+[GD] 600 out of 15000 iterations, tol = 0.000030
+[GD] 700 out of 15000 iterations, tol = 0.000021
+[GD] 800 out of 15000 iterations, tol = 0.000015
+[GD] 900 out of 15000 iterations, tol = 0.000011
+[GD] converged in 928 iterations
+3c288  PSNR:  55.70827226123051
+3c288  SNR:  33.02
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  32  iterations to converge.
+selected_thresh:  0.019073486328125
+gamma_alpha:  200433.84314618903
+MAP image:  132452.265625
+thresholded image:  349175.5
+SNR (thresh vs MAP) at lvl 0: 35.620000
+SNR (MAP vs GT) at lvl 0: 61.530000
+SNR (thresh vs MAP) at lvl 1: 32.980000
+SNR (MAP vs GT) at lvl 1: 54.840000
+SNR (thresh vs MAP) at lvl 2: 28.730000
+SNR (MAP vs GT) at lvl 2: 41.870000
+SNR (thresh vs MAP) at lvl 3: 28.300000
+SNR (MAP vs GT) at lvl 3: 35.080000
+SNR (thresh vs MAP) at lvl 4: 37.240000
+SNR (MAP vs GT) at lvl 4: 39.200000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.114799
+[GD] 100 out of 15000 iterations, tol = 0.003820
+[GD] 200 out of 15000 iterations, tol = 0.001947
+[GD] 300 out of 15000 iterations, tol = 0.001290
+[GD] 400 out of 15000 iterations, tol = 0.000690
+[GD] 500 out of 15000 iterations, tol = 0.000503
+[GD] 600 out of 15000 iterations, tol = 0.000302
+[GD] 700 out of 15000 iterations, tol = 0.000253
+[GD] 800 out of 15000 iterations, tol = 0.000194
+[GD] 900 out of 15000 iterations, tol = 0.000154
+[GD] 1000 out of 15000 iterations, tol = 0.000134
+[GD] 1100 out of 15000 iterations, tol = 0.000099
+[GD] 1200 out of 15000 iterations, tol = 0.000077
+[GD] 1300 out of 15000 iterations, tol = 0.000079
+[GD] 1400 out of 15000 iterations, tol = 0.000061
+[GD] 1500 out of 15000 iterations, tol = 0.000054
+[GD] 1600 out of 15000 iterations, tol = 0.000049
+[GD] 1700 out of 15000 iterations, tol = 0.000039
+[GD] 1800 out of 15000 iterations, tol = 0.000035
+[GD] 1900 out of 15000 iterations, tol = 0.000034
+[GD] 2000 out of 15000 iterations, tol = 0.000029
+[GD] 2100 out of 15000 iterations, tol = 0.000026
+[GD] 2200 out of 15000 iterations, tol = 0.000024
+[GD] 2300 out of 15000 iterations, tol = 0.000021
+[GD] 2400 out of 15000 iterations, tol = 0.000021
+[GD] 2500 out of 15000 iterations, tol = 0.000019
+[GD] 2600 out of 15000 iterations, tol = 0.000017
+[GD] 2700 out of 15000 iterations, tol = 0.000015
+[GD] 2800 out of 15000 iterations, tol = 0.000015
+[GD] 2900 out of 15000 iterations, tol = 0.000013
+[GD] 3000 out of 15000 iterations, tol = 0.000013
+[GD] 3100 out of 15000 iterations, tol = 0.000012
+[GD] 3200 out of 15000 iterations, tol = 0.000011
+[GD] 3300 out of 15000 iterations, tol = 0.000010
+[GD] 3400 out of 15000 iterations, tol = 0.000010
+[GD] converged in 3438 iterations
+W28  PSNR:  52.73465091224437
+W28  SNR:  23.88
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  30  iterations to converge.
+selected_thresh:  0.05035400390625
+gamma_alpha:  84829.38025556403
+MAP image:  16847.802734375
+thresholded image:  287119.4375
+SNR (thresh vs MAP) at lvl 0: 26.800000
+SNR (MAP vs GT) at lvl 0: 50.350000
+SNR (thresh vs MAP) at lvl 1: 21.630000
+SNR (MAP vs GT) at lvl 1: 44.430000
+SNR (thresh vs MAP) at lvl 2: 19.960000
+SNR (MAP vs GT) at lvl 2: 34.640000
+SNR (thresh vs MAP) at lvl 3: 19.240000
+SNR (MAP vs GT) at lvl 3: 30.280000
+SNR (thresh vs MAP) at lvl 4: 22.590000
+SNR (MAP vs GT) at lvl 4: 25.580000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.099016
+[GD] 100 out of 15000 iterations, tol = 0.002840
+[GD] 200 out of 15000 iterations, tol = 0.001671
+[GD] 300 out of 15000 iterations, tol = 0.000983
+[GD] 400 out of 15000 iterations, tol = 0.000507
+[GD] 500 out of 15000 iterations, tol = 0.000395
+[GD] 600 out of 15000 iterations, tol = 0.000260
+[GD] 700 out of 15000 iterations, tol = 0.000193
+[GD] 800 out of 15000 iterations, tol = 0.000164
+[GD] 900 out of 15000 iterations, tol = 0.000115
+[GD] 1000 out of 15000 iterations, tol = 0.000093
+[GD] 1100 out of 15000 iterations, tol = 0.000084
+[GD] 1200 out of 15000 iterations, tol = 0.000071
+[GD] 1300 out of 15000 iterations, tol = 0.000053
+[GD] 1400 out of 15000 iterations, tol = 0.000047
+[GD] 1500 out of 15000 iterations, tol = 0.000044
+[GD] 1600 out of 15000 iterations, tol = 0.000038
+[GD] 1700 out of 15000 iterations, tol = 0.000029
+[GD] 1800 out of 15000 iterations, tol = 0.000029
+[GD] 1900 out of 15000 iterations, tol = 0.000027
+[GD] 2000 out of 15000 iterations, tol = 0.000022
+[GD] 2100 out of 15000 iterations, tol = 0.000020
+[GD] 2200 out of 15000 iterations, tol = 0.000020
+[GD] 2300 out of 15000 iterations, tol = 0.000018
+[GD] 2400 out of 15000 iterations, tol = 0.000015
+[GD] 2500 out of 15000 iterations, tol = 0.000015
+[GD] 2600 out of 15000 iterations, tol = 0.000013
+[GD] 2700 out of 15000 iterations, tol = 0.000013
+[GD] 2800 out of 15000 iterations, tol = 0.000011
+[GD] 2900 out of 15000 iterations, tol = 0.000011
+[GD] 3000 out of 15000 iterations, tol = 0.000011
+[GD] converged in 3062 iterations
+W28  PSNR:  54.74684418502961
+W28  SNR:  25.89
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  30  iterations to converge.
+selected_thresh:  0.03448486328125
+gamma_alpha:  100932.05017743903
+MAP image:  32950.47265625
+thresholded image:  343977.375
+SNR (thresh vs MAP) at lvl 0: 29.430000
+SNR (MAP vs GT) at lvl 0: 56.680000
+SNR (thresh vs MAP) at lvl 1: 24.330000
+SNR (MAP vs GT) at lvl 1: 48.890000
+SNR (thresh vs MAP) at lvl 2: 22.280000
+SNR (MAP vs GT) at lvl 2: 38.320000
+SNR (thresh vs MAP) at lvl 3: 21.140000
+SNR (MAP vs GT) at lvl 3: 33.330000
+SNR (thresh vs MAP) at lvl 4: 23.970000
+SNR (MAP vs GT) at lvl 4: 27.100000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.103101
+[GD] 100 out of 15000 iterations, tol = 0.003191
+[GD] 200 out of 15000 iterations, tol = 0.001419
+[GD] 300 out of 15000 iterations, tol = 0.000672
+[GD] 400 out of 15000 iterations, tol = 0.000396
+[GD] 500 out of 15000 iterations, tol = 0.000262
+[GD] 600 out of 15000 iterations, tol = 0.000196
+[GD] 700 out of 15000 iterations, tol = 0.000139
+[GD] 800 out of 15000 iterations, tol = 0.000105
+[GD] 900 out of 15000 iterations, tol = 0.000091
+[GD] 1000 out of 15000 iterations, tol = 0.000072
+[GD] 1100 out of 15000 iterations, tol = 0.000055
+[GD] 1200 out of 15000 iterations, tol = 0.000047
+[GD] 1300 out of 15000 iterations, tol = 0.000041
+[GD] 1400 out of 15000 iterations, tol = 0.000037
+[GD] 1500 out of 15000 iterations, tol = 0.000030
+[GD] 1600 out of 15000 iterations, tol = 0.000026
+[GD] 1700 out of 15000 iterations, tol = 0.000024
+[GD] 1800 out of 15000 iterations, tol = 0.000021
+[GD] 1900 out of 15000 iterations, tol = 0.000019
+[GD] 2000 out of 15000 iterations, tol = 0.000017
+[GD] 2100 out of 15000 iterations, tol = 0.000016
+[GD] 2200 out of 15000 iterations, tol = 0.000013
+[GD] 2300 out of 15000 iterations, tol = 0.000013
+[GD] 2400 out of 15000 iterations, tol = 0.000012
+[GD] 2500 out of 15000 iterations, tol = 0.000011
+[GD] 2600 out of 15000 iterations, tol = 0.000010
+[GD] converged in 2635 iterations
+W28  PSNR:  56.25557416412821
+W28  SNR:  27.4
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  32  iterations to converge.
+selected_thresh:  0.023651123046875
+gamma_alpha:  132321.04627118903
+MAP image:  64339.46875
+thresholded image:  404003.21875
+SNR (thresh vs MAP) at lvl 0: 32.140000
+SNR (MAP vs GT) at lvl 0: 59.240000
+SNR (thresh vs MAP) at lvl 1: 27.030000
+SNR (MAP vs GT) at lvl 1: 53.040000
+SNR (thresh vs MAP) at lvl 2: 24.760000
+SNR (MAP vs GT) at lvl 2: 41.390000
+SNR (thresh vs MAP) at lvl 3: 23.210000
+SNR (MAP vs GT) at lvl 3: 35.560000
+SNR (thresh vs MAP) at lvl 4: 25.530000
+SNR (MAP vs GT) at lvl 4: 28.350000
+--- loading checkpoint from epoch 10 ---
+---------------------
+Building a CRR-NN model with 
+ - [1, 8, 32] channels 
+ - linear_spline activation functions
+  (LinearSpline(mode=conv, num_activations=32, init=zero, size=21, grid=0.010, monotonic_constraint=True.))
+---------------------
+Numbers of parameters before prunning: 13610
+---------------------
+ PRUNNING 
+ Found 22 filters with non-vanishing potential functions
+---------------------
+Numbers of parameters after prunning: 4183
+Lipschitz bound 0.770
+[GD] 0 out of 15000 iterations, tol = 0.117326
+[GD] 100 out of 15000 iterations, tol = 0.003548
+[GD] 200 out of 15000 iterations, tol = 0.000964
+[GD] 300 out of 15000 iterations, tol = 0.000437
+[GD] 400 out of 15000 iterations, tol = 0.000245
+[GD] 500 out of 15000 iterations, tol = 0.000148
+[GD] 600 out of 15000 iterations, tol = 0.000103
+[GD] 700 out of 15000 iterations, tol = 0.000078
+[GD] 800 out of 15000 iterations, tol = 0.000060
+[GD] 900 out of 15000 iterations, tol = 0.000047
+[GD] 1000 out of 15000 iterations, tol = 0.000037
+[GD] 1100 out of 15000 iterations, tol = 0.000032
+[GD] 1200 out of 15000 iterations, tol = 0.000026
+[GD] 1300 out of 15000 iterations, tol = 0.000021
+[GD] 1400 out of 15000 iterations, tol = 0.000019
+[GD] 1500 out of 15000 iterations, tol = 0.000018
+[GD] 1600 out of 15000 iterations, tol = 0.000015
+[GD] 1700 out of 15000 iterations, tol = 0.000013
+[GD] 1800 out of 15000 iterations, tol = 0.000013
+[GD] 1900 out of 15000 iterations, tol = 0.000012
+[GD] 2000 out of 15000 iterations, tol = 0.000010
+[GD] converged in 2031 iterations
+W28  PSNR:  57.412665929448195
+W28  SNR:  28.56
+-----------------------
+Updating spline coefficients for the reg cost
+ (the gradient-step model is trained and intergration is required to compute the regularization cost)
+-----------------------
+Pixel UQ required  32  iterations to converge.
+selected_thresh:  0.016937255859375
+gamma_alpha:  193314.83533368903
+MAP image:  125333.2578125
+thresholded image:  506269.15625
+SNR (thresh vs MAP) at lvl 0: 34.570000
+SNR (MAP vs GT) at lvl 0: 62.720000
+SNR (thresh vs MAP) at lvl 1: 29.500000
+SNR (MAP vs GT) at lvl 1: 55.670000
+SNR (thresh vs MAP) at lvl 2: 27.020000
+SNR (MAP vs GT) at lvl 2: 44.180000
+SNR (thresh vs MAP) at lvl 3: 25.160000
+SNR (MAP vs GT) at lvl 3: 37.020000
+SNR (thresh vs MAP) at lvl 4: 26.800000
+SNR (MAP vs GT) at lvl 4: 29.380000
+
+
+ CYN obs time:  1h
+MAP SNR:  [25.72]
+Optim iterations:  [3241]
+Optim computing time:  [36.167466163635254]
+UQ iterations:  [30]
+UQ computing time:  [0.35478830337524414]
+***
+SNR (MAP vs GT): 			 25.72
+SNR (MAP vs GT) at lvl 0: 			36.15
+SNR (MAP vs GT) at lvl 1: 			37.05
+SNR (MAP vs GT) at lvl 2: 			32.91
+SNR (MAP vs GT) at lvl 3: 			30.53
+SNR (MAP vs GT) at lvl 4: 			30.75
+SNR (thresh vs MAP): 			 13.73
+SNR (thresh vs MAP) at lvl 0: 			17.17
+SNR (thresh vs MAP) at lvl 1: 			22.10
+SNR (thresh vs MAP) at lvl 2: 			20.95
+SNR (thresh vs MAP) at lvl 3: 			21.64
+SNR (thresh vs MAP) at lvl 4: 			26.63
+
+
+ CYN obs time:  2h
+MAP SNR:  [27.84]
+Optim iterations:  [2586]
+Optim computing time:  [51.71438765525818]
+UQ iterations:  [30]
+UQ computing time:  [0.49945855140686035]
+***
+SNR (MAP vs GT): 			 27.84
+SNR (MAP vs GT) at lvl 0: 			49.99
+SNR (MAP vs GT) at lvl 1: 			43.59
+SNR (MAP vs GT) at lvl 2: 			35.33
+SNR (MAP vs GT) at lvl 3: 			31.90
+SNR (MAP vs GT) at lvl 4: 			31.85
+SNR (thresh vs MAP): 			 13.99
+SNR (thresh vs MAP) at lvl 0: 			17.44
+SNR (thresh vs MAP) at lvl 1: 			22.62
+SNR (thresh vs MAP) at lvl 2: 			21.33
+SNR (thresh vs MAP) at lvl 3: 			21.79
+SNR (thresh vs MAP) at lvl 4: 			26.03
+
+
+ CYN obs time:  4h
+MAP SNR:  [28.4]
+Optim iterations:  [1843]
+Optim computing time:  [66.79233622550964]
+UQ iterations:  [30]
+UQ computing time:  [0.766157865524292]
+***
+SNR (MAP vs GT): 			 28.4
+SNR (MAP vs GT) at lvl 0: 			54.94
+SNR (MAP vs GT) at lvl 1: 			48.47
+SNR (MAP vs GT) at lvl 2: 			37.05
+SNR (MAP vs GT) at lvl 3: 			32.29
+SNR (MAP vs GT) at lvl 4: 			31.93
+SNR (thresh vs MAP): 			 15.19
+SNR (thresh vs MAP) at lvl 0: 			19.02
+SNR (thresh vs MAP) at lvl 1: 			23.84
+SNR (thresh vs MAP) at lvl 2: 			22.43
+SNR (thresh vs MAP) at lvl 3: 			22.56
+SNR (thresh vs MAP) at lvl 4: 			26.20
+
+
+ CYN obs time:  8h
+MAP SNR:  [28.74]
+Optim iterations:  [1346]
+Optim computing time:  [91.79073858261108]
+UQ iterations:  [32]
+UQ computing time:  [1.362044095993042]
+***
+SNR (MAP vs GT): 			 28.74
+SNR (MAP vs GT) at lvl 0: 			58.52
+SNR (MAP vs GT) at lvl 1: 			51.57
+SNR (MAP vs GT) at lvl 2: 			39.79
+SNR (MAP vs GT) at lvl 3: 			32.74
+SNR (MAP vs GT) at lvl 4: 			31.59
+SNR (thresh vs MAP): 			 18.34
+SNR (thresh vs MAP) at lvl 0: 			23.26
+SNR (thresh vs MAP) at lvl 1: 			26.96
+SNR (thresh vs MAP) at lvl 2: 			25.37
+SNR (thresh vs MAP) at lvl 3: 			24.95
+SNR (thresh vs MAP) at lvl 4: 			27.33
+
+
+ M31 obs time:  1h
+MAP SNR:  [25.29]
+Optim iterations:  [1644]
+Optim computing time:  [17.014809131622314]
+UQ iterations:  [26]
+UQ computing time:  [0.2782716751098633]
+***
+SNR (MAP vs GT): 			 25.29
+SNR (MAP vs GT) at lvl 0: 			49.96
+SNR (MAP vs GT) at lvl 1: 			42.51
+SNR (MAP vs GT) at lvl 2: 			28.47
+SNR (MAP vs GT) at lvl 3: 			29.26
+SNR (MAP vs GT) at lvl 4: 			35.45
+SNR (thresh vs MAP): 			 15.27
+SNR (thresh vs MAP) at lvl 0: 			24.24
+SNR (thresh vs MAP) at lvl 1: 			20.54
+SNR (thresh vs MAP) at lvl 2: 			19.22
+SNR (thresh vs MAP) at lvl 3: 			22.96
+SNR (thresh vs MAP) at lvl 4: 			38.69
+
+
+ M31 obs time:  2h
+MAP SNR:  [28.39]
+Optim iterations:  [1458]
+Optim computing time:  [28.194133043289185]
+UQ iterations:  [28]
+UQ computing time:  [0.4399759769439697]
+***
+SNR (MAP vs GT): 			 28.39
+SNR (MAP vs GT) at lvl 0: 			55.19
+SNR (MAP vs GT) at lvl 1: 			47.40
+SNR (MAP vs GT) at lvl 2: 			32.73
+SNR (MAP vs GT) at lvl 3: 			31.90
+SNR (MAP vs GT) at lvl 4: 			36.03
+SNR (thresh vs MAP): 			 17.95
+SNR (thresh vs MAP) at lvl 0: 			28.07
+SNR (thresh vs MAP) at lvl 1: 			24.05
+SNR (thresh vs MAP) at lvl 2: 			21.93
+SNR (thresh vs MAP) at lvl 3: 			24.00
+SNR (thresh vs MAP) at lvl 4: 			38.27
+
+
+ M31 obs time:  4h
+MAP SNR:  [31.94]
+Optim iterations:  [1503]
+Optim computing time:  [53.24219298362732]
+UQ iterations:  [30]
+UQ computing time:  [0.730417013168335]
+***
+SNR (MAP vs GT): 			 31.94
+SNR (MAP vs GT) at lvl 0: 			58.18
+SNR (MAP vs GT) at lvl 1: 			52.32
+SNR (MAP vs GT) at lvl 2: 			39.55
+SNR (MAP vs GT) at lvl 3: 			35.04
+SNR (MAP vs GT) at lvl 4: 			36.80
+SNR (thresh vs MAP): 			 19.87
+SNR (thresh vs MAP) at lvl 0: 			30.84
+SNR (thresh vs MAP) at lvl 1: 			26.61
+SNR (thresh vs MAP) at lvl 2: 			24.00
+SNR (thresh vs MAP) at lvl 3: 			25.01
+SNR (thresh vs MAP) at lvl 4: 			37.58
+
+
+ M31 obs time:  8h
+MAP SNR:  [34.42]
+Optim iterations:  [1557]
+Optim computing time:  [105.24560976028442]
+UQ iterations:  [30]
+UQ computing time:  [1.2577803134918213]
+***
+SNR (MAP vs GT): 			 34.42
+SNR (MAP vs GT) at lvl 0: 			62.01
+SNR (MAP vs GT) at lvl 1: 			54.96
+SNR (MAP vs GT) at lvl 2: 			44.51
+SNR (MAP vs GT) at lvl 3: 			38.21
+SNR (MAP vs GT) at lvl 4: 			37.66
+SNR (thresh vs MAP): 			 22.01
+SNR (thresh vs MAP) at lvl 0: 			33.84
+SNR (thresh vs MAP) at lvl 1: 			29.49
+SNR (thresh vs MAP) at lvl 2: 			26.45
+SNR (thresh vs MAP) at lvl 3: 			26.41
+SNR (thresh vs MAP) at lvl 4: 			36.81
+
+
+ 3c288 obs time:  1h
+MAP SNR:  [25.01]
+Optim iterations:  [1365]
+Optim computing time:  [13.928140878677368]
+UQ iterations:  [26]
+UQ computing time:  [0.2782869338989258]
+***
+SNR (MAP vs GT): 			 25.01
+SNR (MAP vs GT) at lvl 0: 			45.45
+SNR (MAP vs GT) at lvl 1: 			40.91
+SNR (MAP vs GT) at lvl 2: 			28.70
+SNR (MAP vs GT) at lvl 3: 			28.16
+SNR (MAP vs GT) at lvl 4: 			37.72
+SNR (thresh vs MAP): 			 14.32
+SNR (thresh vs MAP) at lvl 0: 			17.86
+SNR (thresh vs MAP) at lvl 1: 			20.76
+SNR (thresh vs MAP) at lvl 2: 			20.38
+SNR (thresh vs MAP) at lvl 3: 			25.32
+SNR (thresh vs MAP) at lvl 4: 			39.22
+
+
+ 3c288 obs time:  2h
+MAP SNR:  [27.0]
+Optim iterations:  [1099]
+Optim computing time:  [21.217573404312134]
+UQ iterations:  [28]
+UQ computing time:  [0.4392237663269043]
+***
+SNR (MAP vs GT): 			 27.0
+SNR (MAP vs GT) at lvl 0: 			53.84
+SNR (MAP vs GT) at lvl 1: 			46.04
+SNR (MAP vs GT) at lvl 2: 			31.41
+SNR (MAP vs GT) at lvl 3: 			29.61
+SNR (MAP vs GT) at lvl 4: 			38.20
+SNR (thresh vs MAP): 			 19.01
+SNR (thresh vs MAP) at lvl 0: 			24.73
+SNR (thresh vs MAP) at lvl 1: 			25.52
+SNR (thresh vs MAP) at lvl 2: 			23.81
+SNR (thresh vs MAP) at lvl 3: 			26.89
+SNR (thresh vs MAP) at lvl 4: 			37.81
+
+
+ 3c288 obs time:  4h
+MAP SNR:  [29.62]
+Optim iterations:  [988]
+Optim computing time:  [34.990710973739624]
+UQ iterations:  [32]
+UQ computing time:  [0.7767045497894287]
+***
+SNR (MAP vs GT): 			 29.62
+SNR (MAP vs GT) at lvl 0: 			57.33
+SNR (MAP vs GT) at lvl 1: 			51.00
+SNR (MAP vs GT) at lvl 2: 			35.43
+SNR (MAP vs GT) at lvl 3: 			31.80
+SNR (MAP vs GT) at lvl 4: 			38.68
+SNR (thresh vs MAP): 			 22.63
+SNR (thresh vs MAP) at lvl 0: 			31.63
+SNR (thresh vs MAP) at lvl 1: 			30.11
+SNR (thresh vs MAP) at lvl 2: 			26.91
+SNR (thresh vs MAP) at lvl 3: 			28.01
+SNR (thresh vs MAP) at lvl 4: 			37.79
+
+
+ 3c288 obs time:  8h
+MAP SNR:  [33.02]
+Optim iterations:  [928]
+Optim computing time:  [62.67642045021057]
+UQ iterations:  [32]
+UQ computing time:  [1.333019495010376]
+***
+SNR (MAP vs GT): 			 33.02
+SNR (MAP vs GT) at lvl 0: 			61.53
+SNR (MAP vs GT) at lvl 1: 			54.84
+SNR (MAP vs GT) at lvl 2: 			41.87
+SNR (MAP vs GT) at lvl 3: 			35.08
+SNR (MAP vs GT) at lvl 4: 			39.20
+SNR (thresh vs MAP): 			 24.22
+SNR (thresh vs MAP) at lvl 0: 			35.62
+SNR (thresh vs MAP) at lvl 1: 			32.98
+SNR (thresh vs MAP) at lvl 2: 			28.73
+SNR (thresh vs MAP) at lvl 3: 			28.30
+SNR (thresh vs MAP) at lvl 4: 			37.24
+
+
+ W28 obs time:  1h
+MAP SNR:  [23.88]
+Optim iterations:  [3438]
+Optim computing time:  [34.82517337799072]
+UQ iterations:  [30]
+UQ computing time:  [0.3121492862701416]
+***
+SNR (MAP vs GT): 			 23.88
+SNR (MAP vs GT) at lvl 0: 			50.35
+SNR (MAP vs GT) at lvl 1: 			44.43
+SNR (MAP vs GT) at lvl 2: 			34.64
+SNR (MAP vs GT) at lvl 3: 			30.28
+SNR (MAP vs GT) at lvl 4: 			25.58
+SNR (thresh vs MAP): 			 14.38
+SNR (thresh vs MAP) at lvl 0: 			26.80
+SNR (thresh vs MAP) at lvl 1: 			21.63
+SNR (thresh vs MAP) at lvl 2: 			19.96
+SNR (thresh vs MAP) at lvl 3: 			19.24
+SNR (thresh vs MAP) at lvl 4: 			22.59
+
+
+ W28 obs time:  2h
+MAP SNR:  [25.89]
+Optim iterations:  [3062]
+Optim computing time:  [59.248223066329956]
+UQ iterations:  [30]
+UQ computing time:  [0.4685046672821045]
+***
+SNR (MAP vs GT): 			 25.89
+SNR (MAP vs GT) at lvl 0: 			56.68
+SNR (MAP vs GT) at lvl 1: 			48.89
+SNR (MAP vs GT) at lvl 2: 			38.32
+SNR (MAP vs GT) at lvl 3: 			33.33
+SNR (MAP vs GT) at lvl 4: 			27.10
+SNR (thresh vs MAP): 			 16.49
+SNR (thresh vs MAP) at lvl 0: 			29.43
+SNR (thresh vs MAP) at lvl 1: 			24.33
+SNR (thresh vs MAP) at lvl 2: 			22.28
+SNR (thresh vs MAP) at lvl 3: 			21.14
+SNR (thresh vs MAP) at lvl 4: 			23.97
+
+
+ W28 obs time:  4h
+MAP SNR:  [27.4]
+Optim iterations:  [2635]
+Optim computing time:  [93.605703830719]
+UQ iterations:  [32]
+UQ computing time:  [0.7759802341461182]
+***
+SNR (MAP vs GT): 			 27.4
+SNR (MAP vs GT) at lvl 0: 			59.24
+SNR (MAP vs GT) at lvl 1: 			53.04
+SNR (MAP vs GT) at lvl 2: 			41.39
+SNR (MAP vs GT) at lvl 3: 			35.56
+SNR (MAP vs GT) at lvl 4: 			28.35
+SNR (thresh vs MAP): 			 18.7
+SNR (thresh vs MAP) at lvl 0: 			32.14
+SNR (thresh vs MAP) at lvl 1: 			27.03
+SNR (thresh vs MAP) at lvl 2: 			24.76
+SNR (thresh vs MAP) at lvl 3: 			23.21
+SNR (thresh vs MAP) at lvl 4: 			25.53
+
+
+ W28 obs time:  8h
+MAP SNR:  [28.56]
+Optim iterations:  [2031]
+Optim computing time:  [137.23642802238464]
+UQ iterations:  [32]
+UQ computing time:  [1.3259618282318115]
+***
+SNR (MAP vs GT): 			 28.56
+SNR (MAP vs GT) at lvl 0: 			62.72
+SNR (MAP vs GT) at lvl 1: 			55.67
+SNR (MAP vs GT) at lvl 2: 			44.18
+SNR (MAP vs GT) at lvl 3: 			37.02
+SNR (MAP vs GT) at lvl 4: 			29.38
+SNR (thresh vs MAP): 			 20.66
+SNR (thresh vs MAP) at lvl 0: 			34.57
+SNR (thresh vs MAP) at lvl 1: 			29.50
+SNR (thresh vs MAP) at lvl 2: 			27.02
+SNR (thresh vs MAP) at lvl 3: 			25.16
+SNR (thresh vs MAP) at lvl 4: 			26.80
