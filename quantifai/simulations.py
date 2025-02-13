@@ -73,6 +73,7 @@ import matplotlib.pyplot as plt
 def generate_random_empty_ms(
     msname="empty",
     dtime=240,
+    telescope="meerkat",
     synthesis_time=4,
     direction=None,
     f0=None,
@@ -97,7 +98,7 @@ def generate_random_empty_ms(
     if f0 is None:
         f0 = int(800 + 700 * np.random.rand())
 
-    simms_call = f"""simms -dir J2000,{direction} -os -T meerkat -dt {dtime} -st {synthesis_time} -nc 10 -f0 {f0}MHz -df 10MHz -pl XX YY -n {msname}.ms"""
+    simms_call = f"""simms -dir J2000,{direction} -os -T {telescope} -dt {dtime} -st {synthesis_time} -nc 10 -f0 {f0}MHz -df 10MHz -pl XX YY -n {msname}.ms"""
     print(simms_call)
     os.system(simms_call)
 
@@ -109,6 +110,9 @@ def generate_random_empty_ms(
 
     uu_data = uvfits[0].data["UU"]
     vv_data = uvfits[0].data["VV"]
+
+    print("uu_data.shape: ", uu_data.shape)
+    print("vv_data.shape: ", vv_data.shape)
 
     # Normalize UV data to [-pi, pi]
     uu_data = (uu_data - uu_data.min()) / (uu_data.max() - uu_data.min())
