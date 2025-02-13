@@ -26,6 +26,9 @@ simms -dir J2000,13h18m54.86s,-15d36m04.25s -os -T meerkat -dt 240 -st 8 -nc 10 
 ```
 # or
 ``` python
+import sys
+sys.path.append("path_to_quantifai")
+from simulations import generate_random_empty_ms
 generate_random_empty_ms(msname='meerkat_simulation_1h', synthesis_time=1, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
 generate_random_empty_ms(msname='meerkat_simulation_2h', synthesis_time=2, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
 generate_random_empty_ms(msname='meerkat_simulation_4h', synthesis_time=4, direction="13h18m54.86s,-15d36m04.25s", f0=1400)
