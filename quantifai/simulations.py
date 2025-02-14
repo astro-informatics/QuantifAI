@@ -109,7 +109,7 @@ def generate_random_empty_ms(
     exportuvfits(f"{msname}.ms", fitsfile=f"{msname}_uv.fits")
 
     # Load fits file
-    uvfits = fits.open(f"{msname}_uv.fits")
+    uvfits = fits.open(f"{msname}_uv.fits", memmap=True)
 
     uu_data = uvfits[0].data["UU"]
     vv_data = uvfits[0].data["VV"]
@@ -117,11 +117,18 @@ def generate_random_empty_ms(
     print("uu_data.shape: ", uu_data.shape)
     print("vv_data.shape: ", vv_data.shape)
 
+    # Compute min and max values
+    uu_data_min = uu_data.min()
+    uu_data_max = uu_data.max()
+
+    vv_data_min = vv_data.min()
+    vv_data_max = vv_data.max()
+
     # Normalize UV data to [-pi, pi]
-    uu_data = (uu_data - uu_data.min()) / (uu_data.max() - uu_data.min())
+    uu_data = (uu_data - uu_data_min) / (uu_data_max - uu_data_min)
     uu_data = uu_data * 2 * np.pi - np.pi
 
-    vv_data = (vv_data - vv_data.min()) / (vv_data.max() - vv_data.min())
+    vv_data = (vv_data - vv_data_min) / (vv_data_max - vv_data_min)
     vv_data = vv_data * 2 * np.pi - np.pi
 
     # Save dict
