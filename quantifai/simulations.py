@@ -80,6 +80,7 @@ def generate_random_empty_ms(
     synthesis_time=4,
     direction=None,
     f0=None,
+    add_w_axis=False,
 ):
     """creates empty meerkat measurement set
 
@@ -137,7 +138,14 @@ def generate_random_empty_ms(
         "vv": vv_data,
         "simms_call": simms_call,
     }
-    np.save(f"{msname}_uv_only.npy", save_dict, allow_pickle=True)
+
+    save_path = f"{msname}_uv_only.npy"
+
+    if add_w_axis:
+        save_dict["ww"] = uvfits[0].data["WW"]
+        save_path = f"{msname}_uvw_only.npy"
+
+    np.save(save_path, save_dict, allow_pickle=True)
 
     # Plot UV coverage
     plt.figure(figsize=(10, 8), dpi=300)
